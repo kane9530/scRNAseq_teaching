@@ -6,7 +6,7 @@ scRNAseq computational workshop series given to the AMA and Steventon labs
 
 ## Table of Contents
 
-## Developed and maintained by:
-Giles Harper-Donnelly 
-Kane Toh
+## Created by:
+- Giles Harper-Donnelly 
+- Kane Toh
 
