@@ -10,7 +10,7 @@ Extensive introduction to sc analysis from some great people, updated regularly:
 [Orchestrating Single-Cell Analysis with Bioconductor](https://osca.bioconductor.org/).
 
 Quick and dirty way of analysing sc data:
-[A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor] https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5112579/
+[A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor] (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5112579/)
 
 ### R
 As with many languages [Codeacademy](https://www.codecademy.com/) is a great place to start particularly the [Learn R series](https://www.codecademy.com/learn/learn-r).
