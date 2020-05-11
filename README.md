@@ -1,5 +1,5 @@
 # scRNAseq_teaching
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kane9530/scRNAseq_teaching/master)
+- Launch in Rstudio: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kane9530/scRNAseq_teaching/master?urlpath=rstudio)
 
 ## Introduction
 scRNAseq computational workshop series given to the AMA and Steventon labs 
