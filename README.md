@@ -4,7 +4,7 @@
 ## Introduction
 scRNAseq computational workshop series given to the AMA and Steventon labs 
 
-4th & 11th Junes.
+4th & 11th June.
 
 ## Objectives
 
