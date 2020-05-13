@@ -1,0 +1,200 @@
+---
+title: "Clustering"
+author: "GHD"
+date: "12/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Clustering
+
+Using the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).
+
+## Preparing the data
+### Data loading
+
+``` {r load_data, eval=FALSE}
+library(BiocFileCache)
+bfc <- BiocFileCache("raw_data", ask = FALSE)
+raw.path <- bfcrpath(bfc, file.path("http://cf.10xgenomics.com/samples",
+    "cell-exp/2.1.0/pbmc4k/pbmc4k_raw_gene_bc_matrices.tar.gz"))
+untar(raw.path, exdir=file.path(tempdir(), "pbmc4k"))
+
+library(DropletUtils)
+fname <- file.path(tempdir(), "pbmc4k/raw_gene_bc_matrices/GRCh38")
+sce.pbmc <- read10xCounts(fname, col.names=TRUE)
+```
+
+```{r}
+library(scater)
+rownames(sce.pbmc) <- uniquifyFeatureNames(
+    rowData(sce.pbmc)$ID, rowData(sce.pbmc)$Symbol)
+
+library(EnsDb.Hsapiens.v86)
+location <- mapIds(EnsDb.Hsapiens.v86, keys=rowData(sce.pbmc)$ID, 
+    column="SEQNAME", keytype="GENEID")
+```
+
+### Quality control
+We perform cell detection using the emptyDrops() algorithm, as discussed in Section 6.5.
+
+```{r}
+set.seed(100)
+e.out <- emptyDrops(counts(sce.pbmc))
+sce.pbmc <- sce.pbmc[,which(e.out$FDR <= 0.001)]
+unfiltered <- sce.pbmc
+```
+We use a relaxed QC strategy and only remove cells with large mitochondrial proportions, using it as a proxy for cell damage. This reduces the risk of removing cell types with low RNA content, especially in a heterogeneous PBMC population with many different cell types.
+
+```{r}
+stats <- perCellQCMetrics(sce.pbmc, subsets=list(Mito=which(location=="MT")))
+high.mito <- isOutlier(stats$subsets_Mito_percent, type="higher")
+sce.pbmc <- sce.pbmc[,!high.mito]
+```
+
+```{r}
+summary(high.mito)
+```
+##    Mode   FALSE    TRUE 
+## logical    3922     311
+```{r}
+colData(unfiltered) <- cbind(colData(unfiltered), stats)
+unfiltered$discard <- high.mito
+
+gridExtra::grid.arrange(
+    plotColData(unfiltered, y="sum", colour_by="discard") +
+        scale_y_log10() + ggtitle("Total count"),
+    plotColData(unfiltered, y="detected", colour_by="discard") +
+        scale_y_log10() + ggtitle("Detected features"),
+    plotColData(unfiltered, y="subsets_Mito_percent",
+        colour_by="discard") + ggtitle("Mito percent"),
+    ncol=2
+)
+```
+
+Distribution of various QC metrics in the PBMC dataset after cell calling. Each point is a cell and is colored according to whether it was discarded by the mitochondrial filter.
+Figure 25.1: Distribution of various QC metrics in the PBMC dataset after cell calling. Each point is a cell and is colored according to whether it was discarded by the mitochondrial filter.
+
+```{r}
+plotColData(unfiltered, x="sum", y="subsets_Mito_percent",
+    colour_by="discard") + scale_x_log10()
+```
+
+Proportion of mitochondrial reads in each cell of the PBMC dataset compared to its total count.
+Figure 25.2: Proportion of mitochondrial reads in each cell of the PBMC dataset compared to its total count.
+
+### Normalization
+```{r}
+library(scran)
+set.seed(1000)
+clusters <- quickCluster(sce.pbmc)
+sce.pbmc <- computeSumFactors(sce.pbmc, cluster=clusters)
+sce.pbmc <- logNormCounts(sce.pbmc)
+```
+
+```{r}
+summary(sizeFactors(sce.pbmc))
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.009   0.710   0.871   1.000   1.094  13.948
+```{r}
+plot(librarySizeFactors(sce.pbmc), sizeFactors(sce.pbmc), pch=16,
+    xlab="Library size factors", ylab="Deconvolution factors", log="xy")
+```
+
+Relationship between the library size factors and the deconvolution size factors in the PBMC dataset.
+Figure 25.3: Relationship between the library size factors and the deconvolution size factors in the PBMC dataset.
+
+###  Variance modelling
+```{r}
+set.seed(1001)
+dec.pbmc <- modelGeneVarByPoisson(sce.pbmc)
+top.pbmc <- getTopHVGs(dec.pbmc, prop=0.1)
+```
+
+```{r}
+plot(dec.pbmc$mean, dec.pbmc$total, pch=16, cex=0.5,
+    xlab="Mean of log-expression", ylab="Variance of log-expression")
+curfit <- metadata(dec.pbmc)
+curve(curfit$trend(x), col='dodgerblue', add=TRUE, lwd=2)
+```
+
+Per-gene variance as a function of the mean for the log-expression values in the PBMC dataset. Each point represents a gene (black) with the mean-variance trend (blue) fitted to simulated Poisson counts.
+Figure 25.4: Per-gene variance as a function of the mean for the log-expression values in the PBMC dataset. Each point represents a gene (black) with the mean-variance trend (blue) fitted to simulated Poisson counts.
+
+## Dimensionality reduction
+```{r, dimensionality-reduction}
+set.seed(10000)
+sce.pbmc <- denoisePCA(sce.pbmc, subset.row=top.pbmc, technical=dec.pbmc)
+
+set.seed(100000)
+sce.pbmc <- runTSNE(sce.pbmc, dimred="PCA")
+
+set.seed(1000000)
+sce.pbmc <- runUMAP(sce.pbmc, dimred="PCA")
+```
+We verify that a reasonable number of PCs is retained.
+
+```{r}
+ncol(reducedDim(sce.pbmc, "PCA"))
+```
+## [1] 8
+
+*Shorten all of the above to just get to the right sce.pbmc object.*
+
+## Clustering
+Base R provides the kmeans() function that does as its name suggests. We call this on our top PCs to obtain a clustering for a specified number of clusters in the centers= argument, after setting the random seed to ensure that the results are reproducible. In general, the k-means clusters correspond to the visual clusters on the t-SNE plot in Figure 10.6, though there are some divergences that are not observed in, say, Figure 10.1. (This is at least partially due to the fact that t-SNE is itself graph-based and so will naturally agree more with a graph-based clustering strategy.)
+
+```{r}
+set.seed(100)
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=10)
+table(clust.kmeans$cluster)
+```
+## 
+##   1   2   3   4   5   6   7   8   9  10 
+## 472 200  46 515  90 320 241 865 735 438
+```{r}
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+plotReducedDim(sce.pbmc, "TSNE", colour_by="label")
+```
+t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering.
+Figure 10.6:t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering.
+
+If we were so inclined, we could obtain a “reasonable” choice of k by computing the gap statistic using methods from the cluster package. This is the log-ratio of the expected to observed within-cluster sum of squares, where the expected value is computed by randomly distributing cells within the minimum bounding box of the original data. A larger gap statistic represents a lower observed sum of squares - and thus better clustering - compared to a population with no structure. Ideally, we would choose the k that maximizes the gap statistic, but this is often unhelpful as the tendency of k-means to favor spherical clusters drives a large k to capture different cluster shapes. Instead, we choose the most parsimonious k beyond which the increases in the gap statistic are considered insignificant (Figure 10.7).
+
+```{r}
+library(cluster)
+set.seed(110010101)
+gaps <- clusGap(reducedDim(sce.pbmc, "PCA"), kmeans, K.max=20)
+best.k <- maxSE(gaps$Tab[,"gap"], gaps$Tab[,"SE.sim"])
+best.k
+```
+## [1] 9
+```{r}
+plot(gaps$Tab[,"gap"], xlab="Number of clusters", ylab="Gap statistic")
+abline(v=best.k, col="red")
+```
+Gap statistic with respect to increasing number of k-means clusters in the 10X PBMC dataset. The red line represents the chosen k.
+Figure 10.7: Gap statistic with respect to increasing number of k-means clusters in the 10X PBMC dataset. The red line represents the chosen k.
+
+A more practical use of k-means is to deliberately set k to a large value to achieve overclustering. This will forcibly partition cells inside broad clusters that do not have well-defined internal structure. For example, we might be interested in the change in expression from one “side” of a cluster to the other, but the lack of any clear separation within the cluster makes it difficult to separate with graph-based methods, even at the highest resolution. k-means has no such problems and will readily split these broad clusters for greater resolution, though obviously one must be prepared for the additional work involved in interpreting a greater number of clusters.
+
+```{r}
+set.seed(100)
+clust.kmeans2 <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=20)
+table(clust.kmeans2$cluster)
+```
+## 
+##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20 
+## 153 172  47 254 125 207 160 334 204 442 163  68 192 271 113 168 124 420  45 260
+```{r}
+colLabels(sce.pbmc) <- factor(clust.kmeans2$cluster)
+plotTSNE(sce.pbmc, colour_by="label", text_by="label")
+```
+t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering with k=20.
+Figure 10.8:  
+t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering with k=20.
+
