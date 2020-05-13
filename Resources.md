@@ -3,11 +3,10 @@ The start of a collection of resources that are useful for learning single-cell 
 
 ## Online Tutorials
 ### scRNA-seq
+My first port of call would be [Orchestrating Single-Cell Analysis with Bioconductor](https://osca.bioconductor.org/) an extensive introduction to sc analysis from some great people, updated regularly, with many fully worked examples.
+
 Sanger single cell course:
 https://scrnaseq-course.cog.sanger.ac.uk/website/index.html.
-
-Extensive introduction to sc analysis from some great people, updated regularly:
-[Orchestrating Single-Cell Analysis with Bioconductor](https://osca.bioconductor.org/).
 
 Quick and dirty way of analysing sc data:
 [A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5112579/)
@@ -15,7 +14,10 @@ Quick and dirty way of analysing sc data:
 ### R
 As with many languages [Codeacademy](https://www.codecademy.com/) is a great place to start particularly the [Learn R series](https://www.codecademy.com/learn/learn-r).
 
-Hadley Wickham's [R for Data Science](https://r4ds.had.co.nz/). Hadley is the author of a number of very popular R packages, particularly within the '[tidyverse](https://www.tidyverse.org)', this guide is a great introduction to some of the tidyverse tools for handling and visualising data in R.
+Hadley Wickham's [R for Data Science](https://r4ds.had.co.nz/). Hadley is the author of a number of very popular R packages, particularly within the [tidyverse](https://www.tidyverse.org), this guide is a great introduction to some of the tidyverse tools for handling and visualising data in R.
+
+For some more advanced advice about good-practice for managing projects in R [What They Forgot to Teach You About R](https://rstats.wtf/) is short, accessible, and very useful.
+
 
 ## Papers
 - 2018: RNA Sequencing Data: Hitchhiker's Guide to Expression Analysis
