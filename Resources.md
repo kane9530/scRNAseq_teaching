@@ -11,6 +11,9 @@ https://scrnaseq-course.cog.sanger.ac.uk/website/index.html.
 Quick and dirty way of analysing sc data:
 [A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5112579/)
 
+### Clustering
+Using the [Clustree] (https://cran.r-project.org/web/packages/clustree/vignettes/clustree.html) package
+
 ### R
 As with many languages [Codeacademy](https://www.codecademy.com/) is a great place to start particularly the [Learn R series](https://www.codecademy.com/learn/learn-r).
 
