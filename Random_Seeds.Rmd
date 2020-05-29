@@ -123,7 +123,50 @@ knitr::kable(df,digits=3,row.names=TRUE)
 
 This time our samples have been shifted two positions forward! What is going on?
 
-The answer is a little out of the scope of this tutorial but the key idea is that a normally distributed random variable from $N(0,1)$ is "more random" than a uniformly distributed variable from $U(0,1)$. Our simulation of a single gaussian variable is equivalent to simulating two uniform variables, the PRNG must be used twice and so the hidden state is advanced two times. 
+The answer is a little out of the scope of this tutorial and is highly dependent on what algorithms are being used 'under the hood'. 
 
-This is important as it means that in practice it is very hard to keep track of the internal state of the PRNG. Say you have two analysis scripts and you want some key algorithms inside to use the same pseudorandom numbers (for example you might want your tSNE plots to be reproducible). It is not sufficient to set the same random seed at the top of the script as it is all too easy to inadvertantly create a divergence in the hidden state of the PRNG between the two scripts. Therefore it is best to reseed the random number generator just before the relevant code and to ensure that any intervening operations are identical.
+The key lesson from this is that in practice it is very hard to keep track of the internal state of the PRNG. This is important as an analyses might only be reproducible if the PRNG is in exactly the same state when random number are used. Say you have two similar analysis scripts and you want some key algorithms inside to use the same pseudorandom numbers (for example you might want your tSNE plots to be reproducible). It is not sufficient to set the same random seed at the top of the script as it is all too easy to inadvertantly create a divergence in the hidden state of the PRNG in the two scripts. Therefore it is best to reseed the random number generator just before the relevant code and to ensure that any intervening operations are identical.
+
+
+## Extra stuff
+Box-Muller transform converts takes $U_1, U_2 \sim U(0,1)$ and converts them to a point in polar coordinates $R^2 = -2 \ln U_1$, $\Theta = 2\pi U_2.$ taking the $X$ and $Y$ coordinates of this point gives two independent normally distributed variables.
+
+Thus it produces normal random numbers in pairs, producing a single random variable progresses the state of the PRNG the same amount as producing two:
+
+```{r, Box-Muller}
+RNGkind(normal.kind="Box-Muller")
+set.seed(1)
+seq1 <- runif(5)
+set.seed(1)
+ignore <- rnorm(1)
+seq2 <- runif(5)
+set.seed(1)
+ignore <- rnorm(2)
+seq3 <- runif(5)
+
+seq1
+seq2
+seq3
+```
+
+
+```{r, inversion}
+RNGkind(normal.kind="default")
+set.seed(1)
+seq1 <- runif(5)
+set.seed(1)
+ignore <- rnorm(1)
+seq2 <- runif(5)
+set.seed(1)
+ignore <- rnorm(2)
+seq3 <- runif(5)
+
+seq1
+seq2
+seq3
+```
+
+
+
+
 
