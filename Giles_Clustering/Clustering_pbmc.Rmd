@@ -1,0 +1,104 @@
+---
+title: "Clustering"
+author: "GHD"
+date: "12/05/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages, message=FALSE}
+library(scater)
+library(scran)
+```
+# Clustering
+
+Using the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).
+
+# Data loading
+```{r load_data}
+sce.pbmc <- readRDS("pbmc_preproc.rds")
+```
+
+## Clustering
+
+The most important thing to remember about clustering is that by choosing the right algorithm and representation of our data we can achieve any clustering result that we like. Clustering is just one of many tools we have to explore data and the perspectives it offers are only as reasonable as the choices and assumptions that underlie them.
+
+### k-means
+
+There are many good [explanations](https://blog.easysol.net/machine-learning-algorithms-3) and [visualisations](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/) of how the k-means algorithm works online so I won't go into the details here. The most important algorithm that the k-means algorithm is the number of centers, or clusters, you use. Once this value is chosen an iterative algorithm is used to assign each point to a cluster in such a way that minimises the sum of the square distances between each point and the average position of all of the points which are assigned to that cluster.
+
+
+```{r, fig.cap="t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering."}
+set.seed(100)
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=10)
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
+  ggtitle("10 k-mean Clusters")
+```
+
+### Choosing k
+
+If we were so inclined, we could obtain a “reasonable” choice of k by computing the gap statistic using methods from the cluster package. This is the log-ratio of the expected to observed within-cluster sum of squares, where the expected value is computed by randomly distributing cells within the minimum bounding box of the original data. A larger gap statistic represents a lower observed sum of squares - and thus better clustering - compared to a population with no structure. Ideally, we would choose the k that maximizes the gap statistic, but this is often unhelpful as the tendency of k-means to favor spherical clusters drives a large k to capture different cluster shapes. Instead, we choose the most parsimonious k beyond which the increases in the gap statistic are considered insignificant (Figure 10.7).
+
+```{r, eval=FALSE, warning=FALSE}
+library(cluster)
+set.seed(110010101)
+gaps <- clusGap(reducedDim(sce.pbmc, "PCA"), kmeans, K.max=15)
+# Choose the smallest k for which the gap statistic is within 1 SE of the best k.
+best.k <- maxSE(gaps$Tab[,"gap"], gaps$Tab[,"SE.sim"])
+best.k
+```
+```{r, eval=FALSE}
+plot(gaps$Tab[,"gap"], xlab="Number of clusters", ylab="Gap statistic")
+abline(v=best.k, col="red")
+```
+Gap statistic with respect to increasing number of k-means clusters in the 10X PBMC dataset. The red line represents the chosen k.
+Figure 10.7: Gap statistic with respect to increasing number of k-means clusters in the 10X PBMC dataset. The red line represents the chosen k.
+
+A more practical use of k-means is to deliberately set k to a large value to achieve overclustering. This will forcibly partition cells inside broad clusters that do not have well-defined internal structure. For example, we might be interested in the change in expression from one “side” of a cluster to the other, but the lack of any clear separation within the cluster makes it difficult to separate with graph-based methods, even at the highest resolution. k-means has no such problems and will readily split these broad clusters for greater resolution, though obviously one must be prepared for the additional work involved in interpreting a greater number of clusters.
+
+```{r}
+set.seed(100)
+clust.kmeans2 <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=20)
+table(clust.kmeans2$cluster)
+```
+## 
+##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20 
+## 153 172  47 254 125 207 160 334 204 442 163  68 192 271 113 168 124 420  45 260
+```{r}
+colLabels(sce.pbmc) <- factor(clust.kmeans2$cluster)
+plotTSNE(sce.pbmc, colour_by="label", text_by="label")
+```
+t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering with k=20.
+Figure 10.8:  
+t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering with k=20.
+
+### Which supspace?
+
+The k-means algorithm uses the distance between points to cluster them. which the distances between points and centers. However these distances depend on the space in which our points are lying, so which space should we choose?
+
+We might choose the 'full-space' in which each dimension corresponds to the expression of a different gene. In the case of the pbmc data we have ~30,000 dimensions in our data. It can be quite computationally expensive to work in this full space. Instead we could perform on the data in a reduced dimensionality space such as PCA, $t$-SNE, or UMAP. Very low dimensional representations of the data such as 2D $t$-SNE or UMAP cannot include much of the true variation that exists in the data, if we clustered on them directly we would miss important structure in the data. Therefore usually a compromise is made and clustering is performed on the data in the subpsace formed by the first 50-100 PCs from PCA, this hopefully has sufficiently many dimensions to contain most of the important structure in the data while not being too computationally expensive to work with.
+
+After clustering in this higher dimensional space we use the lower dimension $t$-SNE or UMAP to plot the results.
+
+Below we can see the difference between clustering in PCA space vs directly on the two $t$-SNE dimensions. Note how the mixing of cells with different labels in the PCA space plot contrasts with the clean cluster boundaries from $t$-SNE clustering. 
+
+```{r which-subspace}
+N_centers = 5
+set.seed(100)
+clust.kmeans.pca.space <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=N_centers)
+set.seed(100)
+clust.kmeans.tsne.space <- kmeans(reducedDim(sce.pbmc, "TSNE"), centers=N_centers)
+
+colLabels(sce.pbmc) <- factor(clust.kmeans.pca.space$cluster)
+kmeansPlotPcaSpace <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
+  ggtitle("Clustered in PCA space")
+colLabels(sce.pbmc) <- factor(clust.kmeans.tsne.space$cluster)
+kmeansPlotTsneSpace <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
+  ggtitle("Clustered in tSNE space")
+
+multiplot(kmeansPlotPcaSpace,kmeansPlotTsneSpace,cols=2)
+```
