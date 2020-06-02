@@ -13,11 +13,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(scater)
 library(scran)
 ```
-# Clustering
 
-Using the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).
+Large sections of this document were inspired by the [Orchestrating Singe-Cell Analysis](https://osca.bioconductor.org/clustering.html) online book.
 
-# Data loading
+## Load Data
+We will use the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).
+
+For simplicity we will load the data as a `SingleCellExperiment` object from a saved `.rds` file. This data has already had some basic QC, normalisation, and dimensionality reduction applied.
+
 ```{r load_data}
 sce.pbmc <- readRDS("pbmc_preproc.rds")
 ```
@@ -26,22 +29,53 @@ sce.pbmc <- readRDS("pbmc_preproc.rds")
 
 The most important thing to remember about clustering is that by choosing the right algorithm and representation of our data we can achieve any clustering result that we like. Clustering is just one of many tools we have to explore data and the perspectives it offers are only as reasonable as the choices and assumptions that underlie them.
 
-### k-means
+## k-means
 
-There are many good [explanations](https://blog.easysol.net/machine-learning-algorithms-3) and [visualisations](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/) of how the k-means algorithm works online so I won't go into the details here. The most important algorithm that the k-means algorithm is the number of centers, or clusters, you use. Once this value is chosen an iterative algorithm is used to assign each point to a cluster in such a way that minimises the sum of the square distances between each point and the average position of all of the points which are assigned to that cluster.
-
+There are many good [explanations](https://blog.easysol.net/machine-learning-algorithms-3) and [visualisations](https://www.naftaliharris.com/blog/visualizing-k-means-clustering/) of how the k-means algorithm works online so I won't go into much detail here. The objective of the algorithm is to assign each point to a cluster in such a way that minimises the sum of the squared distances between each point and the average position of all of the points which are assigned to its cluster.
 
 ```{r, fig.cap="t-SNE plot of the 10X PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering."}
 set.seed(100)
 clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=10)
 colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
 plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
-  ggtitle("10 k-mean Clusters")
+  ggtitle("k-mean Clustering")
 ```
 
 ### Choosing k
 
+The key parameter in k-means clustering is choice of the number of clusters, k.
+```{r, echo=FALSE}
+set.seed(100)
+k <- 3
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=k)
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+kmeans_3 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label",add_legend=FALSE) +
+  ggtitle(paste(k, "Clusters"))
+
+k <- 5
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=k)
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+kmeans_5 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label",add_legend=FALSE) +
+  ggtitle(paste(k, "Clusters"))
+
+k <- 10
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=k)
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+kmeans_10 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label",add_legend=FALSE) +
+  ggtitle(paste(k, "Clusters"))
+
+k <- 20
+clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=k)
+colLabels(sce.pbmc) <- factor(clust.kmeans$cluster)
+kmeans_20 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label",add_legend=FALSE) +
+  ggtitle(paste(k, "Clusters"))
+
+multiplot(kmeans_3,kmeans_5,kmeans_10,kmeans_20,layout=matrix(seq(4),nrow=2,byrow=TRUE))
+```
+
 If we were so inclined, we could obtain a “reasonable” choice of k by computing the gap statistic using methods from the cluster package. This is the log-ratio of the expected to observed within-cluster sum of squares, where the expected value is computed by randomly distributing cells within the minimum bounding box of the original data. A larger gap statistic represents a lower observed sum of squares - and thus better clustering - compared to a population with no structure. Ideally, we would choose the k that maximizes the gap statistic, but this is often unhelpful as the tendency of k-means to favor spherical clusters drives a large k to capture different cluster shapes. Instead, we choose the most parsimonious k beyond which the increases in the gap statistic are considered insignificant (Figure 10.7).
+
+
 
 ```{r, eval=FALSE, warning=FALSE}
 library(cluster)
@@ -102,3 +136,7 @@ kmeansPlotTsneSpace <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
 
 multiplot(kmeansPlotPcaSpace,kmeansPlotTsneSpace,cols=2)
 ```
+
+
+## Bibliography
+Zheng, G. X., J. M. Terry, P. Belgrader, P. Ryvkin, Z. W. Bent, R. Wilson, S. B. Ziraldo, et al. 2017. “Massively parallel digital transcriptional profiling of single cells.” Nat Commun 8 (January): 14049.
