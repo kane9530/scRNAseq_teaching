@@ -14,7 +14,7 @@ library(scater)
 library(scran)
 ```
 
-Large sections of this document are closely inspired by the [Orchestrating Singe-Cell Analysis](https://osca.bioconductor.org/clustering.html) online book.
+Large sections of this document are adapted from [Orchestrating Singe-Cell Analysis](https://osca.bioconductor.org/clustering.html).
 
 ## Load Data
 We will use the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).
@@ -139,7 +139,7 @@ There are several important choices to be made when implementing a graph-based c
 
 For example choosing a lower value of $k$, the number of nearest neighbours to consider when building the graph, tends to produce 'higher resolution' clustering, with more clusters detected than if a higher value of $k$ were chosen. As with k-means clustering there is no 'right answer' and it is best to use experiment with this parameter to investigate how it effects your results.
 
-```{r, graph-different-k, echo=FALSE}
+```{r graph-different-k, echo=FALSE}
 # More resolved.
 g.8 <- buildSNNGraph(sce.pbmc, k=8, use.dimred = 'PCA')
 clust.8 <- igraph::cluster_walktrap(g.8)$membership
