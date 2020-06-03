@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 4 Clustering | NMps_book.utf8</title>
+  <meta name="description" content="" />
+  <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 4 Clustering | NMps_book.utf8" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 4 Clustering | NMps_book.utf8" />
+  
+  
+  
+
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="quality-control.html"/>
+<link rel="next" href="optimisations.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">A Minimal Book Example</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Preface</a></li>
+<li class="chapter" data-level="2" data-path="downloading-data.html"><a href="downloading-data.html"><i class="fa fa-check"></i><b>2</b> Downloading data</a></li>
+<li class="chapter" data-level="3" data-path="quality-control.html"><a href="quality-control.html"><i class="fa fa-check"></i><b>3</b> Quality Control</a><ul>
+<li class="chapter" data-level="3.1" data-path="quality-control.html"><a href="quality-control.html#overview"><i class="fa fa-check"></i><b>3.1</b> Overview</a></li>
+<li class="chapter" data-level="3.2" data-path="quality-control.html"><a href="quality-control.html#importing-libraries"><i class="fa fa-check"></i><b>3.2</b> Importing libraries</a></li>
+<li class="chapter" data-level="3.3" data-path="quality-control.html"><a href="quality-control.html#importing-the-data"><i class="fa fa-check"></i><b>3.3</b> Importing the data</a></li>
+<li class="chapter" data-level="3.4" data-path="quality-control.html"><a href="quality-control.html#preparing-the-column-metadata"><i class="fa fa-check"></i><b>3.4</b> Preparing the column metadata</a></li>
+<li class="chapter" data-level="3.5" data-path="quality-control.html"><a href="quality-control.html#preparing-the-row-metadata"><i class="fa fa-check"></i><b>3.5</b> Preparing the row metadata</a></li>
+<li class="chapter" data-level="3.6" data-path="quality-control.html"><a href="quality-control.html#constructing-the-single-cell-experiment-object"><i class="fa fa-check"></i><b>3.6</b> Constructing the single cell experiment object</a></li>
+<li class="chapter" data-level="3.7" data-path="quality-control.html"><a href="quality-control.html#quality-control-with-scater"><i class="fa fa-check"></i><b>3.7</b> Quality control with scater</a></li>
+<li class="chapter" data-level="3.8" data-path="quality-control.html"><a href="quality-control.html#saving-the-rds-object"><i class="fa fa-check"></i><b>3.8</b> Saving the RDS object</a></li>
+<li class="chapter" data-level="3.9" data-path="quality-control.html"><a href="quality-control.html#session-info"><i class="fa fa-check"></i><b>3.9</b> Session Info</a></li>
+<li class="chapter" data-level="3.10" data-path="quality-control.html"><a href="quality-control.html#solutions"><i class="fa fa-check"></i><b>3.10</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="clustering.html"><a href="clustering.html"><i class="fa fa-check"></i><b>4</b> Clustering</a><ul>
+<li class="chapter" data-level="4.1" data-path="clustering.html"><a href="clustering.html#introduction"><i class="fa fa-check"></i><b>4.1</b> Introduction</a></li>
+<li class="chapter" data-level="4.2" data-path="clustering.html"><a href="clustering.html#importing-libraries-1"><i class="fa fa-check"></i><b>4.2</b> Importing libraries</a></li>
+<li class="chapter" data-level="4.3" data-path="clustering.html"><a href="clustering.html#importing-data"><i class="fa fa-check"></i><b>4.3</b> Importing Data</a></li>
+<li class="chapter" data-level="4.4" data-path="clustering.html"><a href="clustering.html#useful-seurat-object-interaction-methods"><i class="fa fa-check"></i><b>4.4</b> Useful seurat object interaction methods</a></li>
+<li class="chapter" data-level="4.5" data-path="clustering.html"><a href="clustering.html#performing-dimensional-reduction"><i class="fa fa-check"></i><b>4.5</b> Performing dimensional reduction</a></li>
+<li class="chapter" data-level="4.6" data-path="clustering.html"><a href="clustering.html#clustering-1"><i class="fa fa-check"></i><b>4.6</b> Clustering</a><ul>
+<li class="chapter" data-level="4.6.1" data-path="clustering.html"><a href="clustering.html#constructing-a-shared-nearest-neighbour-snn-graph"><i class="fa fa-check"></i><b>4.6.1</b> Constructing a Shared-nearest neighbour (SNN) graph</a></li>
+<li class="chapter" data-level="4.6.2" data-path="clustering.html"><a href="clustering.html#clustering-with-the-louvain-algorithm"><i class="fa fa-check"></i><b>4.6.2</b> Clustering with the Louvain algorithm</a></li>
+<li class="chapter" data-level="4.6.3" data-path="clustering.html"><a href="clustering.html#resources"><i class="fa fa-check"></i><b>4.6.3</b> Resources</a></li>
+</ul></li>
+<li class="chapter" data-level="4.7" data-path="clustering.html"><a href="clustering.html#umap-with-authors-annotations"><i class="fa fa-check"></i><b>4.7</b> UMAP with authors’ annotations</a></li>
+<li class="chapter" data-level="4.8" data-path="clustering.html"><a href="clustering.html#t-sne-with-authors-annotations"><i class="fa fa-check"></i><b>4.8</b> t-SNE with authors’ annotations</a></li>
+<li class="chapter" data-level="4.9" data-path="clustering.html"><a href="clustering.html#assigning-our-own-cluster-identities"><i class="fa fa-check"></i><b>4.9</b> Assigning our own cluster identities</a></li>
+<li class="chapter" data-level="4.10" data-path="clustering.html"><a href="clustering.html#umap-visualisation-of-our-annotations"><i class="fa fa-check"></i><b>4.10</b> UMAP visualisation of our annotations</a></li>
+<li class="chapter" data-level="4.11" data-path="clustering.html"><a href="clustering.html#highlighting-tailbud-cells"><i class="fa fa-check"></i><b>4.11</b> Highlighting tailbud cells</a></li>
+<li class="chapter" data-level="4.12" data-path="clustering.html"><a href="clustering.html#saving-rds-object"><i class="fa fa-check"></i><b>4.12</b> Saving RDS object</a></li>
+<li class="chapter" data-level="4.13" data-path="clustering.html"><a href="clustering.html#session-info-1"><i class="fa fa-check"></i><b>4.13</b> Session Info</a></li>
+<li class="chapter" data-level="4.14" data-path="clustering.html"><a href="clustering.html#solutions-1"><i class="fa fa-check"></i><b>4.14</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="optimisations.html"><a href="optimisations.html"><i class="fa fa-check"></i><b>5</b> Optimisations</a><ul>
+<li class="chapter" data-level="5.1" data-path="optimisations.html"><a href="optimisations.html#importing-libraries-2"><i class="fa fa-check"></i><b>5.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="5.2" data-path="optimisations.html"><a href="optimisations.html#importing-data-1"><i class="fa fa-check"></i><b>5.2</b> Importing Data</a></li>
+<li class="chapter" data-level="5.3" data-path="optimisations.html"><a href="optimisations.html#number-of-pcs-to-retain"><i class="fa fa-check"></i><b>5.3</b> Number of PCs to retain</a><ul>
+<li class="chapter" data-level="5.3.1" data-path="optimisations.html"><a href="optimisations.html#scree-plot"><i class="fa fa-check"></i><b>5.3.1</b> Scree plot</a></li>
+<li class="chapter" data-level="5.3.2" data-path="optimisations.html"><a href="optimisations.html#examining-technical-noise"><i class="fa fa-check"></i><b>5.3.2</b> Examining technical noise</a></li>
+</ul></li>
+<li class="chapter" data-level="5.4" data-path="optimisations.html"><a href="optimisations.html#evaluating-clustering-results"><i class="fa fa-check"></i><b>5.4</b> Evaluating clustering results</a><ul>
+<li class="chapter" data-level="5.4.1" data-path="optimisations.html"><a href="optimisations.html#cluster-stability"><i class="fa fa-check"></i><b>5.4.1</b> Cluster stability</a></li>
+<li class="chapter" data-level="5.4.2" data-path="optimisations.html"><a href="optimisations.html#cluster-separability"><i class="fa fa-check"></i><b>5.4.2</b> Cluster separability</a></li>
+</ul></li>
+<li class="chapter" data-level="5.5" data-path="optimisations.html"><a href="optimisations.html#comparison-with-authors-labels"><i class="fa fa-check"></i><b>5.5</b> Comparison with authors’ labels</a><ul>
+<li class="chapter" data-level="5.5.1" data-path="optimisations.html"><a href="optimisations.html#concordance-in-tailbud-cluster-assignment"><i class="fa fa-check"></i><b>5.5.1</b> Concordance in tailbud cluster assignment</a></li>
+<li class="chapter" data-level="5.5.2" data-path="optimisations.html"><a href="optimisations.html#optimising-the-seurat-clustering-parameters"><i class="fa fa-check"></i><b>5.5.2</b> Optimising the seurat clustering parameters</a></li>
+</ul></li>
+<li class="chapter" data-level="5.6" data-path="optimisations.html"><a href="optimisations.html#selecting-cells-for-downstream-analysis"><i class="fa fa-check"></i><b>5.6</b> Selecting cells for downstream analysis</a></li>
+<li class="chapter" data-level="5.7" data-path="optimisations.html"><a href="optimisations.html#session-info-2"><i class="fa fa-check"></i><b>5.7</b> Session Info</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html"><i class="fa fa-check"></i><b>6</b> Differentially Expressed Genes</a><ul>
+<li class="chapter" data-level="6.1" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualisation-of-marker-genes-in-our-dataset"><i class="fa fa-check"></i><b>6.1</b> Visualisation of marker genes in our dataset</a></li>
+<li class="chapter" data-level="6.2" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#obtaining-a-list-of-differentially-expressed-genes"><i class="fa fa-check"></i><b>6.2</b> Obtaining a list of differentially expressed genes</a></li>
+<li class="chapter" data-level="6.3" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#analysing-output-of-the-wilcoxon-test"><i class="fa fa-check"></i><b>6.3</b> Analysing output of the wilcoxon test</a></li>
+<li class="chapter" data-level="6.4" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualising-the-expression-of-the-marker-genes"><i class="fa fa-check"></i><b>6.4</b> Visualising the expression of the marker genes</a></li>
+<li class="chapter" data-level="6.5" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#session-info-3"><i class="fa fa-check"></i><b>6.5</b> Session Info</a></li>
+<li class="chapter" data-level="6.6" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#solutions-2"><i class="fa fa-check"></i><b>6.6</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="subclustering.html"><a href="subclustering.html"><i class="fa fa-check"></i><b>7</b> Subclustering</a><ul>
+<li class="chapter" data-level="7.1" data-path="subclustering.html"><a href="subclustering.html#importing-libraries-3"><i class="fa fa-check"></i><b>7.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="7.2" data-path="subclustering.html"><a href="subclustering.html#importing-data-2"><i class="fa fa-check"></i><b>7.2</b> Importing Data</a></li>
+<li class="chapter" data-level="7.3" data-path="subclustering.html"><a href="subclustering.html#subclustering-the-tb-cells---using-only-cells-that-are-assigned-to-the-shared-cluster-across-all-the-clustering-resolutions."><i class="fa fa-check"></i><b>7.3</b> Subclustering the TB cells - Using only cells that are assigned to the ‘shared’ cluster across all the clustering resolutions.</a></li>
+<li class="chapter" data-level="7.4" data-path="subclustering.html"><a href="subclustering.html#dimensional-reduction-with-umap-and-clustering"><i class="fa fa-check"></i><b>7.4</b> Dimensional reduction with UMAP and clustering</a></li>
+<li class="chapter" data-level="7.5" data-path="subclustering.html"><a href="subclustering.html#identifying-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>7.5</b> Identifying marker genes for each cluster</a></li>
+<li class="chapter" data-level="7.6" data-path="subclustering.html"><a href="subclustering.html#merging-clusters-that-do-not-appear-distinct"><i class="fa fa-check"></i><b>7.6</b> Merging clusters that do not appear distinct</a></li>
+<li class="chapter" data-level="7.7" data-path="subclustering.html"><a href="subclustering.html#plotting-umap-and-assigning-cluster-labels"><i class="fa fa-check"></i><b>7.7</b> Plotting UMAP and assigning cluster labels</a></li>
+<li class="chapter" data-level="7.8" data-path="subclustering.html"><a href="subclustering.html#checking-the-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>7.8</b> Checking the marker genes for each cluster</a></li>
+<li class="chapter" data-level="7.9" data-path="subclustering.html"><a href="subclustering.html#sox2-tbxta-coexpression"><i class="fa fa-check"></i><b>7.9</b> Sox2 tbxta coexpression</a></li>
+<li class="chapter" data-level="7.10" data-path="subclustering.html"><a href="subclustering.html#viewing-genes-of-interest-with-a-dotplot"><i class="fa fa-check"></i><b>7.10</b> Viewing genes of interest with a dotplot</a></li>
+<li class="chapter" data-level="7.11" data-path="subclustering.html"><a href="subclustering.html#exporting-the-violin-plots-for-genes-of-interest."><i class="fa fa-check"></i><b>7.11</b> Exporting the violin plots for genes of interest.</a></li>
+<li class="chapter" data-level="7.12" data-path="subclustering.html"><a href="subclustering.html#saving-rds-object-1"><i class="fa fa-check"></i><b>7.12</b> Saving RDS object</a></li>
+<li class="chapter" data-level="7.13" data-path="subclustering.html"><a href="subclustering.html#session-info-4"><i class="fa fa-check"></i><b>7.13</b> Session Info</a></li>
+<li class="chapter" data-level="7.14" data-path="subclustering.html"><a href="subclustering.html#solutions-3"><i class="fa fa-check"></i><b>7.14</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="pseudotime.html"><a href="pseudotime.html"><i class="fa fa-check"></i><b>8</b> Pseudotime</a><ul>
+<li class="chapter" data-level="8.1" data-path="pseudotime.html"><a href="pseudotime.html#importing-libraries-4"><i class="fa fa-check"></i><b>8.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="8.2" data-path="pseudotime.html"><a href="pseudotime.html#importing-data-3"><i class="fa fa-check"></i><b>8.2</b> Importing data</a></li>
+<li class="chapter" data-level="8.3" data-path="pseudotime.html"><a href="pseudotime.html#tradeseq-workflow-analyses"><i class="fa fa-check"></i><b>8.3</b> TradeSeq workflow analyses</a></li>
+<li class="chapter" data-level="8.4" data-path="pseudotime.html"><a href="pseudotime.html#session-info-5"><i class="fa fa-check"></i><b>8.4</b> Session Info</a></li>
+<li class="chapter" data-level="8.5" data-path="pseudotime.html"><a href="pseudotime.html#solutions-4"><i class="fa fa-check"></i><b>8.5</b> Solutions</a></li>
+</ul></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./"></a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="clustering" class="section level1">
+<h1><span class="header-section-number">Chapter 4</span> Clustering</h1>
+<div id="introduction" class="section level2">
+<h2><span class="header-section-number">4.1</span> Introduction</h2>
+<p>In part 1), we performed quality control on the cells in our dataset. At this stage, we have discarded <code>8</code> cells which have a low number of expressed features and removed <code>381</code> features which were not expressed in any cell in the dataset. At the end of our analyses, we saved the following at our workplace:</p>
+<ol style="list-style-type: decimal">
+<li>QCed <code>SingleCellExperiment</code> R object (with the <code>.rds</code> file extension)</li>
+<li>Metadata regarding the cells (clusterID, clusternames etc.) in a csv file</li>
+</ol>
+<p>In this section, we will demonstrate the <code>normalisation</code>, <code>feature selection</code>, <code>dimensionality reduction</code> and <code>clustering</code> steps of the scRNAseq workflow. To do this, we will take advantage of the <a href="https://satijalab.org/seurat/">Seurat</a> R package which provides numerous convenient wrapper functions that simplify most of the tasks above to just a single(!) function call.</p>
+<p><em>Q1) Which steps of the workflow are we executing in this notebook?</em></p>
+</div>
+<div id="importing-libraries-1" class="section level2">
+<h2><span class="header-section-number">4.2</span> Importing libraries</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1"><span class="kw">library</span>(SingleCellExperiment)</a>
+<a class="sourceLine" id="cb22-2" data-line-number="2"><span class="kw">library</span>(Seurat)</a>
+<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb22-4" data-line-number="4"><span class="kw">library</span>(gridExtra)</a>
+<a class="sourceLine" id="cb22-5" data-line-number="5"><span class="kw">library</span>(viridis)</a>
+<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="kw">library</span>(extrafont) </a>
+<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="kw">loadfonts</span>(<span class="dt">quiet =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+</div>
+<div id="importing-data" class="section level2">
+<h2><span class="header-section-number">4.3</span> Importing Data</h2>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co"># Import raw dataset and metadata into seurat.</span></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb23-3" data-line-number="3">hpf18 &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="dt">file =</span> <span class="st">&quot;rds/hpf18_QCed_new.rds&quot;</span> ) <span class="co"># Preprocessed dataset Arifrom 1)</span></a>
+<a class="sourceLine" id="cb23-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb23-5" data-line-number="5">colData &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;./hpf18_coldata.csv&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">column_to_rownames</span>(<span class="dt">var =</span> <span class="st">&#39;cells&#39;</span>)</a></code></pre></div>
+<p>SCTransform wrapper in seurat implements the following 3 functions sequentially:</p>
+<ol style="list-style-type: decimal">
+<li>NormalizeData:</li>
+</ol>
+<ul>
+<li><p>In a previous implementation, Seurat normalises the gene measurements for each cell by the total expression in the cell, multiples this by a scale factor (10,000 by default), and then log-transforms the result. More details about the current updated normalisation approach taken by Seurat can be found in the original paper <a href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1874-1">Regularised negative binomial regression</a></p></li>
+<li><p>Seurat’s mode of normalisation is different from the normalisation method implemented in another popular package (scran)</p></li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>FindVariableFeatures:</li>
+</ol>
+<ul>
+<li>Identifies the top 3000 features (genes) that show the greatest cell-to-cell variation in the dataset. These genes are used as they serve to highlight the signal in the dataset.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>ScaleData:</li>
+</ol>
+<ul>
+<li>Standardises the expression levels of each gene such that:
+<ul>
+<li>Mean expression of the gene across all cells is 0</li>
+<li>Variance of the gene across all cells is 1 so that highly expressed genes do not dominate downstream analysis.</li>
+</ul></li>
+</ul>
+<p><em>Q2) Can you list alternative methods of normalising the data?</em></p>
+<p><em>Q3) Why do we focus on the top few variable features?</em></p>
+<p><em>Q4) What is the purpose of scaling the data?</em></p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">hpf18_seurat &lt;-<span class="st"> </span><span class="kw">CreateSeuratObject</span>(<span class="dt">counts=</span> <span class="kw">counts</span>(hpf18), <span class="dt">meta.data =</span> colData)</a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb24-3" data-line-number="3">hpf18_seurat &lt;-<span class="st"> </span><span class="kw">SCTransform</span>(hpf18_seurat, <span class="dt">vars.to.regress =</span> <span class="kw">c</span>(<span class="st">&quot;nCount_RNA&quot;</span>, <span class="st">&quot;libraryName&quot;</span>), <span class="dt">verbose =</span> <span class="ot">FALSE</span>) <span class="co">#Takes about 2 min 30 seconds</span></a></code></pre></div>
+</div>
+<div id="useful-seurat-object-interaction-methods" class="section level2">
+<h2><span class="header-section-number">4.4</span> Useful seurat object interaction methods</h2>
+<ul>
+<li>hpf18_seurat[[“RNA”]] # Accessing RNA assay with [[]] notation</li>
+<li>hpf18_seurat@assays$RNA # Alternative method of accessing assay</li>
+<li>Key(object = hpf18_seurat) # List the available assays</li>
+<li>slotNames(hpf18_seurat)</li>
+<li>DefaultAssay(hpf18_seurat) # Current assay</li>
+<li>head(Idents(hpf18_seurat)) # All identities</li>
+<li>GetAssayData(object = hpf18_seurat)</li>
+<li>Embeddings(object = hpf18_seurat, reduction = “pca”) #Coordinates of cells in low-dimensional space</li>
+<li>Loadings(object = hpf18_seurat, reduction = “pca”) # Assessing loadings for PCA</li>
+<li>FetchData(object = hpf18_seurat, vars = c(“PC_1”)) # Retrieves data for a set of cells</li>
+</ul>
+<p><a href="https://satijalab.org/seurat/essential_commands.html">Complete list of interactions methods</a></p>
+</div>
+<div id="performing-dimensional-reduction" class="section level2">
+<h2><span class="header-section-number">4.5</span> Performing dimensional reduction</h2>
+<p><em>Q5) What does PCA stand for and how does it work?</em></p>
+<p><em>Q6) What does t-SNE stand for and how does it work?</em></p>
+<p><em>Q7) What does UMAP stand for and what is the branch of mathematics that underpins it?</em></p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1">hpf18_seurat &lt;-<span class="st"> </span><span class="kw">RunPCA</span>(hpf18_seurat, <span class="dt">pcs.compute =</span> <span class="dv">25</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb25-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb25-3" data-line-number="3">hpf18_seurat &lt;-<span class="st"> </span><span class="kw">RunTSNE</span>(hpf18_seurat, <span class="dt">dims.use =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">25</span>, <span class="dt">reduction.use =</span> <span class="st">&quot;pca&quot;</span>, <span class="dt">perplexity =</span> <span class="dv">76</span>)</a>
+<a class="sourceLine" id="cb25-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">hpf18_seurat &lt;-<span class="st"> </span><span class="kw">RunUMAP</span>(hpf18_seurat, <span class="dt">dims =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">25</span>,  <span class="dt">min.dist =</span> <span class="fl">0.7</span>, <span class="dt">n.neighbors =</span> 30L, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+</div>
+<div id="clustering-1" class="section level2">
+<h2><span class="header-section-number">4.6</span> Clustering</h2>
+<p>The theory underpinning the two seemingly innocuous functions below is dense. We just need to know enough about the important arguments to work with them. If you want more information, the links below provide a comprehensive overview of the key ideas. I will share what I believe is the bare minimum to start working with these functions intelligently.</p>
+<div id="constructing-a-shared-nearest-neighbour-snn-graph" class="section level3">
+<h3><span class="header-section-number">4.6.1</span> Constructing a Shared-nearest neighbour (SNN) graph</h3>
+<p>Seurat employs a <code>graph-based clustering</code> method. Of course, this is not the only clustering method available- popular alternatives being hierarchical clustering or simple k-means clustering.</p>
+<div id="theory" class="section level4">
+<h4><span class="header-section-number">4.6.1.1</span> Theory</h4>
+<p>To perform graph-based clustering, as the name suggests, we need to construct a graph with our data, where the nodes/vertices in the graph represent our cells and the edge weights between the nodes represent the similarity between the cells involved. How is <code>similarity</code> defined in this context?</p>
+<p>One possible way to define the similarity between two cells is to calculate their <code>Euclidean distance</code>, that is, by obtaining the square root of the sum of squared differences of each feature value. Remember that each cell is represented as a vector, where each entry is the normalised expression value for a gene. Therefore, we are simply calculating the euclidean distance between two vectors.</p>
+<p>Another notion of similarity is based on the number of <code>shared neighbours</code> between two cells. This involves two steps: first, we need to determine the number of neighbors (let this number be <span class="math inline">\(k\)</span>) that each cell can have, and obtain this list of <code>k-nearest neighbors</code>. Second, we draw an edge between two cells if they have a neighbor in common (the intersection of the neighborhoods) and weight the edge by how near each of the shared neighbor is to both nodes. Intuitively, if two nodes A and B share a neighbor C that is very close to both of them (C has a high rank in both nodes), then A and B are very similar to each other and this should be reflected in a high edge weight.</p>
+<p>The latter notion of similarity, based on shared nearest neighbors, is employed in Seurat. Specficially, Seurat uses <code>Jaccard-based weights</code>, in which similarity is defined as the intersection of the neighbors of both cells (shared neighbours) over the union of the neighbors.</p>
+</div>
+<div id="practical-comments" class="section level4">
+<h4><span class="header-section-number">4.6.1.2</span> Practical comments</h4>
+<p>Just as in the k-nearest neighbors algorithm, the number of neighbors, <span class="math inline">\(k\)</span> , considered for each cell is arguably the most important parameter to tinker with. This affects the clustering resolution. A smaller <span class="math inline">\(k\)</span> leads to a finer resolution, with fewer neighbors per cell.</p>
+</div>
+</div>
+<div id="clustering-with-the-louvain-algorithm" class="section level3">
+<h3><span class="header-section-number">4.6.2</span> Clustering with the Louvain algorithm</h3>
+<p>Seurat allows us to use a variety of graph-based clustering methods, with the default being the Louvain algorithm.</p>
+<div id="theory-1" class="section level4">
+<h4><span class="header-section-number">4.6.2.1</span> Theory</h4>
+<p>I cannot put it more succinctly than Shanker Iyer in his quora post cited in the resources section below:</p>
+<blockquote>
+<p>Communities are groups of nodes within a network that are more densely connected to one another than to other nodes. Modularity is a metric that quantifies the quality of an assignment of nodes to communities by evaluating how much more densely connected the nodes within a community are compared to how connected they would be, on average, in a suitably defined random network. The Louvain method of community detection is an algorithm for detecting communities in networks that relies upon a heuristic for maximizing the modularity. The method consists of repeated application of two steps. The first step is a “greedy” assignment of nodes to communities, favoring local optimizations of modularity. The second step is the definition of a new coarse-grained network in terms of the communities found in the first step. These two steps are repeated until no further modularity-increasing reassignments of communities are possible.</p>
+</blockquote>
+</div>
+<div id="practical-comments-1" class="section level4">
+<h4><span class="header-section-number">4.6.2.2</span> Practical comments</h4>
+<p>The resolution parameter is an important parameter to optimize. The smaller the value, the more coarse-grained our clustering, and the fewer clusters are returned.</p>
+</div>
+</div>
+<div id="resources" class="section level3">
+<h3><span class="header-section-number">4.6.3</span> Resources</h3>
+<ul>
+<li><p>This powerpoint presentation by Xu and Su summarises their 2015 paper on the shared nearest neighbor algorithm <a href="https://www.csb.pitt.edu/Faculty/lezon/teaching/journal_club/slides/srashid_slides-151012.pdf">powerpoint</a> <a href="https://academic.oup.com/bioinformatics/article/31/12/1974/214505">Reference</a></p></li>
+<li><p>The best description I have seen about the louvain algorithm is found in this <a href="https://www.quora.com/Is-there-a-simple-explanation-of-the-Louvain-Method-of-community-detection?share=1">quora</a> page. The extended description is a real gem.</p></li>
+<li><p>For a more general understanding of clustering in the context of scRNA-seq data, check out our favorite scRNA-seq guide for more details. <a href="https://osca.bioconductor.org/clustering.html#clustering-graph">osca</a></p></li>
+</ul>
+<p><em>Q8) What are the alternative clustering methods available in seurat? How would you implement them?</em></p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1">hpf18_seurat &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">FindNeighbors</span>(hpf18_seurat,  <span class="dt">dims =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">12</span>, <span class="dt">k.param =</span> <span class="dv">20</span>, <span class="dt">reduction =</span> <span class="st">&quot;pca&quot;</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb26-2" data-line-number="2">hpf18_seurat &lt;-<span class="st"> </span>Seurat<span class="op">::</span><span class="kw">FindClusters</span>(hpf18_seurat, <span class="dt">algorithm =</span> <span class="dv">1</span>, <span class="dt">resolution =</span> <span class="fl">0.8</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+</div>
+</div>
+<div id="umap-with-authors-annotations" class="section level2">
+<h2><span class="header-section-number">4.7</span> UMAP with authors’ annotations</h2>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" data-line-number="1"><span class="kw">Idents</span>(hpf18_seurat) &lt;-<span class="st"> &quot;clusterID&quot;</span></a>
+<a class="sourceLine" id="cb27-2" data-line-number="2"><span class="kw">DimPlot</span>(hpf18_seurat, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>, <span class="dt">label=</span> <span class="ot">FALSE</span>) </a></code></pre></div>
+<div class="figure">
+<img src="NMps_book_files/figure-html/UMAP%20with%20authors%20clustering-1.png" alt="Figure 1- UMAP visualisation of the dataset with the authors labels. The labels appear scattered in the UMAP representation." width="672" />
+<p class="caption">
+(#fig:UMAP with authors clustering)Figure 1- UMAP visualisation of the dataset with the authors labels. The labels appear scattered in the UMAP representation.
+</p>
+</div>
+</div>
+<div id="t-sne-with-authors-annotations" class="section level2">
+<h2><span class="header-section-number">4.8</span> t-SNE with authors’ annotations</h2>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="kw">DimPlot</span>(hpf18_seurat, <span class="dt">reduction =</span> <span class="st">&quot;tsne&quot;</span>, <span class="dt">label=</span> <span class="ot">FALSE</span>) </a></code></pre></div>
+<div class="figure">
+<img src="NMps_book_files/figure-html/TSNE%20with%20authors%20clustering-1.png" alt="Figure 2- t-SNE visualisation of the dataset with the authors labels. Each cluster appears to be more homogeneous in the cell labels than the UMAP visualisation, which is consistent with the t-SNE clustering that was performed in the original study." width="672" />
+<p class="caption">
+(#fig:TSNE with authors clustering)Figure 2- t-SNE visualisation of the dataset with the authors labels. Each cluster appears to be more homogeneous in the cell labels than the UMAP visualisation, which is consistent with the t-SNE clustering that was performed in the original study.
+</p>
+</div>
+</div>
+<div id="assigning-our-own-cluster-identities" class="section level2">
+<h2><span class="header-section-number">4.9</span> Assigning our own cluster identities</h2>
+<p>To match our clustering results with the authors’ cluster annotations, we label each cluster with the cluster name held by the majority of the cells in the cluster (this is what we are doing with the <code>top_n</code> function). We then manually edit the labels for some of the neural clusters that share the same cluster label.</p>
+<p><em>Q9) What does the tidyr::complete function do below?</em></p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" data-line-number="1"><span class="kw">Idents</span>(hpf18_seurat) &lt;-<span class="st"> &quot;seurat_clusters&quot;</span></a>
+<a class="sourceLine" id="cb29-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb29-3" data-line-number="3">clusterIDlabels &lt;-<span class="st"> </span>hpf18_seurat<span class="op">@</span>meta.data <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-4" data-line-number="4"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(clusterNames, seurat_clusters)<span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-5" data-line-number="5"><span class="st">  </span><span class="kw">na.omit</span>()  <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-6" data-line-number="6"><span class="st">  </span><span class="kw">group_by</span>(clusterNames, seurat_clusters) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-7" data-line-number="7"><span class="st">  </span><span class="kw">summarize</span>(<span class="dt">Cell_Numbers=</span><span class="kw">n</span>())<span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-8" data-line-number="8"><span class="st">  </span>tidyr<span class="op">::</span><span class="kw">complete</span>(seurat_clusters)<span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-9" data-line-number="9"><span class="st">  </span><span class="kw">replace_na</span>(<span class="kw">list</span>(<span class="dt">Cell_Numbers =</span> <span class="dv">0</span>))<span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-10" data-line-number="10"><span class="st">  </span><span class="kw">group_by</span>(seurat_clusters)<span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-11" data-line-number="11"><span class="st">  </span><span class="kw">top_n</span>(<span class="dt">n=</span><span class="dv">1</span>, <span class="dt">wt=</span>Cell_Numbers) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-12" data-line-number="12"><span class="st">  </span><span class="kw">arrange</span>(seurat_clusters) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb29-13" data-line-number="13"><span class="st">  </span>dplyr<span class="op">::</span><span class="kw">select</span>(seurat_clusters, clusterNames)</a>
+<a class="sourceLine" id="cb29-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb29-15" data-line-number="15">clusterIDlabels<span class="op">$</span>clusterNames[<span class="dv">1</span><span class="op">:</span><span class="dv">3</span>] &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;18hpf-neural - mid-hindbrain&quot;</span>, <span class="st">&quot;18hpf-neural - fore-midbrain&quot;</span>, <span class="st">&quot;18hpf-neural - midbrain &quot;</span>)</a>
+<a class="sourceLine" id="cb29-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb29-17" data-line-number="17">hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters_names &lt;-<span class="st"> </span>clusterIDlabels<span class="op">$</span>clusterNames[<span class="kw">match</span>(hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters, clusterIDlabels<span class="op">$</span>seurat_clusters)]</a>
+<a class="sourceLine" id="cb29-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb29-19" data-line-number="19">labelList &lt;-<span class="st"> </span><span class="kw">paste</span>(hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters, hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters_name, <span class="dt">sep =</span><span class="st">&quot;: &quot;</span>)</a>
+<a class="sourceLine" id="cb29-20" data-line-number="20">labelList &lt;-<span class="st"> </span>gtools<span class="op">::</span><span class="kw">mixedsort</span>(<span class="kw">unique</span>(<span class="kw">sort</span>(labelList)))</a></code></pre></div>
+</div>
+<div id="umap-visualisation-of-our-annotations" class="section level2">
+<h2><span class="header-section-number">4.10</span> UMAP visualisation of our annotations</h2>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1">cols &lt;-<span class="st"> </span><span class="kw">c</span>(scales<span class="op">::</span><span class="kw">hue_pal</span>()(<span class="dv">18</span>), <span class="st">&quot;#FFFFFF&quot;</span>) <span class="co"># the number of colors should match the number of clusters</span></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3"><span class="kw">DimPlot</span>(hpf18_seurat, <span class="dt">label =</span> <span class="ot">TRUE</span>, <span class="dt">label.size =</span> <span class="dv">4</span>, <span class="dt">pt.size=</span><span class="fl">0.1</span>, <span class="dt">reduction =</span> <span class="st">&quot;umap&quot;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="st">  </span><span class="kw">scale_color_manual</span>(<span class="dt">values =</span> cols, <span class="dt">name =</span> <span class="st">&quot;Cluster Identities&quot;</span>, <span class="dt">labels =</span> labelList)<span class="op">+</span><span class="st"> </span>mytheme</a></code></pre></div>
+<div class="figure">
+<img src="NMps_book_files/figure-html/Dim%20Red%20Visualisation%20of%20my%20clustering-1.png" alt="Figure 3- UMAP visualisation of the dataset with updated labels." width="672" />
+<p class="caption">
+(#fig:Dim Red Visualisation of my clustering)Figure 3- UMAP visualisation of the dataset with updated labels.
+</p>
+</div>
+</div>
+<div id="highlighting-tailbud-cells" class="section level2">
+<h2><span class="header-section-number">4.11</span> Highlighting tailbud cells</h2>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="co"># Selecting cells to highlight</span></a>
+<a class="sourceLine" id="cb31-2" data-line-number="2">cells_PSM &lt;-<span class="st"> </span><span class="kw">colnames</span>(hpf18_seurat[,hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters_names <span class="op">==</span><span class="st"> &quot;18hpf-tailbud - PSM&quot;</span>])</a>
+<a class="sourceLine" id="cb31-3" data-line-number="3">cells_TB &lt;-<span class="st">  </span><span class="kw">colnames</span>(hpf18_seurat[,hpf18_seurat<span class="op">@</span>meta.data<span class="op">$</span>seurat_clusters_names <span class="op">==</span><span class="st"> &quot;18hpf-tailbud - spinal cord&quot;</span>])</a>
+<a class="sourceLine" id="cb31-4" data-line-number="4">cells_highlighted_TB &lt;-<span class="st"> </span><span class="kw">list</span>(cells_PSM, cells_TB)</a>
+<a class="sourceLine" id="cb31-5" data-line-number="5">highlighted_names_TB =<span class="st"> </span><span class="kw">list</span>(<span class="st">&quot;Unselected&quot;</span>,</a>
+<a class="sourceLine" id="cb31-6" data-line-number="6">                            <span class="st">&quot;18hpf-tailbud - spinal cord&quot;</span>,</a>
+<a class="sourceLine" id="cb31-7" data-line-number="7">                        <span class="st">&quot;18hpf-tailbud - PSM&quot;</span> )</a>
+<a class="sourceLine" id="cb31-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb31-9" data-line-number="9">cols_highlight =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;grey&quot;</span>, <span class="st">&quot;#00BB49&quot;</span>,<span class="st">&quot;#8CAB00&quot;</span>)</a>
+<a class="sourceLine" id="cb31-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb31-11" data-line-number="11"><span class="kw">DimPlot</span>(hpf18_seurat, <span class="dt">label =</span> <span class="ot">FALSE</span>, <span class="dt">label.size =</span> <span class="dv">6</span>, <span class="dt">pt.size =</span><span class="fl">0.05</span>,  <span class="dt">cells.highlight =</span> cells_highlighted_TB)<span class="op">+</span></a>
+<a class="sourceLine" id="cb31-12" data-line-number="12"><span class="st">  </span><span class="kw">scale_color_manual</span>(<span class="dt">values =</span> cols_highlight, <span class="dt">name =</span> <span class="st">&quot;Cluster Identities&quot;</span>, <span class="dt">labels =</span> highlighted_names_TB )<span class="op">+</span><span class="st"> </span>mytheme</a></code></pre></div>
+<pre><code>## Scale for &#39;colour&#39; is already present. Adding another scale for &#39;colour&#39;,
+## which will replace the existing scale.</code></pre>
+<div class="figure">
+<img src="NMps_book_files/figure-html/Highlighting%20tailbud%20cells-1.png" alt="Figure 4- UMAP visualisation of the dataset with the tailbud cells highlighted." width="672" />
+<p class="caption">
+(#fig:Highlighting tailbud cells)Figure 4- UMAP visualisation of the dataset with the tailbud cells highlighted.
+</p>
+</div>
+</div>
+<div id="saving-rds-object" class="section level2">
+<h2><span class="header-section-number">4.12</span> Saving RDS object</h2>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="kw">saveRDS</span>(hpf18_seurat, <span class="dt">file =</span> <span class="st">&quot;./rds/hpf18_seurat_dimred_new.rds&quot;</span> )</a></code></pre></div>
+</div>
+<div id="session-info-1" class="section level2">
+<h2><span class="header-section-number">4.13</span> Session Info</h2>
+<details>
+<p><summary>View Session Info</summary></p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb34-1" data-line-number="1">devtools<span class="op">::</span><span class="kw">session_info</span>()</a>
+<a class="sourceLine" id="cb34-2" data-line-number="2"><span class="co">## - Session info ---------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb34-3" data-line-number="3"><span class="co">##  setting  value                       </span></a>
+<a class="sourceLine" id="cb34-4" data-line-number="4"><span class="co">##  version  R version 4.0.0 (2020-04-24)</span></a>
+<a class="sourceLine" id="cb34-5" data-line-number="5"><span class="co">##  os       Windows 10 x64              </span></a>
+<a class="sourceLine" id="cb34-6" data-line-number="6"><span class="co">##  system   x86_64, mingw32             </span></a>
+<a class="sourceLine" id="cb34-7" data-line-number="7"><span class="co">##  ui       RTerm                       </span></a>
+<a class="sourceLine" id="cb34-8" data-line-number="8"><span class="co">##  language (EN)                        </span></a>
+<a class="sourceLine" id="cb34-9" data-line-number="9"><span class="co">##  collate  English_United Kingdom.1252 </span></a>
+<a class="sourceLine" id="cb34-10" data-line-number="10"><span class="co">##  ctype    English_United Kingdom.1252 </span></a>
+<a class="sourceLine" id="cb34-11" data-line-number="11"><span class="co">##  tz       Asia/Kuala_Lumpur           </span></a>
+<a class="sourceLine" id="cb34-12" data-line-number="12"><span class="co">##  date     2020-06-03                  </span></a>
+<a class="sourceLine" id="cb34-13" data-line-number="13"><span class="co">## </span></a>
+<a class="sourceLine" id="cb34-14" data-line-number="14"><span class="co">## - Packages -------------------------------------------------------------------</span></a>
+<a class="sourceLine" id="cb34-15" data-line-number="15"><span class="co">##  package              * version  date       lib source        </span></a>
+<a class="sourceLine" id="cb34-16" data-line-number="16"><span class="co">##  AnnotationDbi        * 1.50.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-17" data-line-number="17"><span class="co">##  ape                    5.3      2019-03-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-18" data-line-number="18"><span class="co">##  assertthat             0.2.1    2019-03-21 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-19" data-line-number="19"><span class="co">##  backports              1.1.6    2020-04-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-20" data-line-number="20"><span class="co">##  beeswarm               0.2.3    2016-04-25 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-21" data-line-number="21"><span class="co">##  Biobase              * 2.48.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-22" data-line-number="22"><span class="co">##  BiocGenerics         * 0.34.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-23" data-line-number="23"><span class="co">##  BiocNeighbors          1.6.0    2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-24" data-line-number="24"><span class="co">##  BiocParallel           1.22.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-25" data-line-number="25"><span class="co">##  BiocSingular           1.4.0    2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-26" data-line-number="26"><span class="co">##  bit                    1.1-15.2 2020-02-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-27" data-line-number="27"><span class="co">##  bit64                  0.9-7    2017-05-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-28" data-line-number="28"><span class="co">##  bitops                 1.0-6    2013-08-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-29" data-line-number="29"><span class="co">##  blob                   1.2.1    2020-01-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-30" data-line-number="30"><span class="co">##  bookdown               0.19     2020-05-15 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-31" data-line-number="31"><span class="co">##  broom                  0.5.6    2020-04-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-32" data-line-number="32"><span class="co">##  callr                  3.4.3    2020-03-28 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-33" data-line-number="33"><span class="co">##  cellranger             1.1.0    2016-07-27 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-34" data-line-number="34"><span class="co">##  cli                    2.0.2    2020-02-28 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-35" data-line-number="35"><span class="co">##  cluster                2.1.0    2019-06-19 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-36" data-line-number="36"><span class="co">##  codetools              0.2-16   2018-12-24 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-37" data-line-number="37"><span class="co">##  colorspace             1.4-1    2019-03-18 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-38" data-line-number="38"><span class="co">##  cowplot                1.0.0    2019-07-11 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-39" data-line-number="39"><span class="co">##  crayon                 1.3.4    2017-09-16 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-40" data-line-number="40"><span class="co">##  data.table             1.12.8   2019-12-09 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-41" data-line-number="41"><span class="co">##  DBI                    1.1.0    2019-12-15 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-42" data-line-number="42"><span class="co">##  dbplyr                 1.4.3    2020-04-19 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-43" data-line-number="43"><span class="co">##  DelayedArray         * 0.14.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-44" data-line-number="44"><span class="co">##  DelayedMatrixStats     1.10.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-45" data-line-number="45"><span class="co">##  desc                   1.2.0    2018-05-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-46" data-line-number="46"><span class="co">##  devtools               2.3.0    2020-04-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-47" data-line-number="47"><span class="co">##  digest                 0.6.25   2020-02-23 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-48" data-line-number="48"><span class="co">##  dplyr                * 0.8.5    2020-03-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-49" data-line-number="49"><span class="co">##  ellipsis               0.3.0    2019-09-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-50" data-line-number="50"><span class="co">##  evaluate               0.14     2019-05-28 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-51" data-line-number="51"><span class="co">##  extrafont            * 0.17     2014-12-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-52" data-line-number="52"><span class="co">##  extrafontdb            1.0      2012-06-11 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-53" data-line-number="53"><span class="co">##  fansi                  0.4.1    2020-01-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-54" data-line-number="54"><span class="co">##  farver                 2.0.3    2020-01-16 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-55" data-line-number="55"><span class="co">##  fitdistrplus           1.0-14   2019-01-23 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-56" data-line-number="56"><span class="co">##  forcats              * 0.5.0    2020-03-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-57" data-line-number="57"><span class="co">##  fs                     1.4.1    2020-04-04 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-58" data-line-number="58"><span class="co">##  future                 1.17.0   2020-04-18 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-59" data-line-number="59"><span class="co">##  future.apply           1.5.0    2020-04-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-60" data-line-number="60"><span class="co">##  generics               0.0.2    2018-11-29 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-61" data-line-number="61"><span class="co">##  GenomeInfoDb         * 1.24.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-62" data-line-number="62"><span class="co">##  GenomeInfoDbData       1.2.3    2020-05-11 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-63" data-line-number="63"><span class="co">##  GenomicRanges        * 1.40.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-64" data-line-number="64"><span class="co">##  ggbeeswarm             0.6.0    2017-08-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-65" data-line-number="65"><span class="co">##  ggplot2              * 3.3.0    2020-03-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-66" data-line-number="66"><span class="co">##  ggrepel                0.8.2    2020-03-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-67" data-line-number="67"><span class="co">##  ggridges               0.5.2    2020-01-12 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-68" data-line-number="68"><span class="co">##  globals                0.12.5   2019-12-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-69" data-line-number="69"><span class="co">##  glue                   1.4.0    2020-04-03 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-70" data-line-number="70"><span class="co">##  gridExtra            * 2.3      2017-09-09 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-71" data-line-number="71"><span class="co">##  gtable                 0.3.0    2019-03-25 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-72" data-line-number="72"><span class="co">##  gtools                 3.8.2    2020-03-31 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-73" data-line-number="73"><span class="co">##  haven                  2.2.0    2019-11-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-74" data-line-number="74"><span class="co">##  highr                  0.8      2019-03-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-75" data-line-number="75"><span class="co">##  hms                    0.5.3    2020-01-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-76" data-line-number="76"><span class="co">##  htmltools              0.4.0    2019-10-04 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-77" data-line-number="77"><span class="co">##  htmlwidgets            1.5.1    2019-10-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-78" data-line-number="78"><span class="co">##  httr                   1.4.1    2019-08-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-79" data-line-number="79"><span class="co">##  ica                    1.0-2    2018-05-24 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-80" data-line-number="80"><span class="co">##  igraph                 1.2.5    2020-03-19 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-81" data-line-number="81"><span class="co">##  IRanges              * 2.22.1   2020-04-28 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-82" data-line-number="82"><span class="co">##  irlba                  2.3.3    2019-02-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-83" data-line-number="83"><span class="co">##  jsonlite               1.6.1    2020-02-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-84" data-line-number="84"><span class="co">##  KernSmooth             2.23-16  2019-10-15 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-85" data-line-number="85"><span class="co">##  knitr                  1.28     2020-02-06 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-86" data-line-number="86"><span class="co">##  labeling               0.3      2014-08-23 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-87" data-line-number="87"><span class="co">##  lattice                0.20-41  2020-04-02 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-88" data-line-number="88"><span class="co">##  lazyeval               0.2.2    2019-03-15 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-89" data-line-number="89"><span class="co">##  leiden                 0.3.3    2020-02-04 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-90" data-line-number="90"><span class="co">##  lifecycle              0.2.0    2020-03-06 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-91" data-line-number="91"><span class="co">##  listenv                0.8.0    2019-12-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-92" data-line-number="92"><span class="co">##  lmtest                 0.9-37   2019-04-30 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-93" data-line-number="93"><span class="co">##  lsei                   1.2-0.1  2020-05-06 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-94" data-line-number="94"><span class="co">##  lubridate              1.7.8    2020-04-06 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-95" data-line-number="95"><span class="co">##  magrittr               1.5      2014-11-22 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-96" data-line-number="96"><span class="co">##  MASS                   7.3-51.5 2019-12-20 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-97" data-line-number="97"><span class="co">##  Matrix                 1.2-18   2019-11-27 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-98" data-line-number="98"><span class="co">##  matrixStats          * 0.56.0   2020-03-13 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-99" data-line-number="99"><span class="co">##  memoise                1.1.0    2017-04-21 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-100" data-line-number="100"><span class="co">##  modelr                 0.1.7    2020-04-30 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-101" data-line-number="101"><span class="co">##  munsell                0.5.0    2018-06-12 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-102" data-line-number="102"><span class="co">##  nlme                   3.1-147  2020-04-13 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-103" data-line-number="103"><span class="co">##  npsurv                 0.4-0.1  2020-05-06 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-104" data-line-number="104"><span class="co">##  org.Dr.eg.db         * 3.11.1   2020-05-11 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-105" data-line-number="105"><span class="co">##  patchwork              1.0.0    2019-12-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-106" data-line-number="106"><span class="co">##  pbapply                1.4-2    2019-08-31 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-107" data-line-number="107"><span class="co">##  pillar                 1.4.4    2020-05-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-108" data-line-number="108"><span class="co">##  pkgbuild               1.0.8    2020-05-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-109" data-line-number="109"><span class="co">##  pkgconfig              2.0.3    2019-09-22 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-110" data-line-number="110"><span class="co">##  pkgload                1.0.2    2018-10-29 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-111" data-line-number="111"><span class="co">##  plotly                 4.9.2.1  2020-04-04 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-112" data-line-number="112"><span class="co">##  plyr                   1.8.6    2020-03-03 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-113" data-line-number="113"><span class="co">##  png                    0.1-7    2013-12-03 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-114" data-line-number="114"><span class="co">##  prettyunits            1.1.1    2020-01-24 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-115" data-line-number="115"><span class="co">##  processx               3.4.2    2020-02-09 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-116" data-line-number="116"><span class="co">##  ps                     1.3.3    2020-05-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-117" data-line-number="117"><span class="co">##  purrr                * 0.3.4    2020-04-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-118" data-line-number="118"><span class="co">##  R.methodsS3          * 1.8.0    2020-02-14 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-119" data-line-number="119"><span class="co">##  R.oo                 * 1.23.0   2019-11-03 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-120" data-line-number="120"><span class="co">##  R.utils              * 2.9.2    2019-12-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-121" data-line-number="121"><span class="co">##  R6                     2.4.1    2019-11-12 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-122" data-line-number="122"><span class="co">##  RANN                   2.6.1    2019-01-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-123" data-line-number="123"><span class="co">##  rappdirs               0.3.1    2016-03-28 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-124" data-line-number="124"><span class="co">##  RColorBrewer           1.1-2    2014-12-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-125" data-line-number="125"><span class="co">##  Rcpp                   1.0.4.6  2020-04-09 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-126" data-line-number="126"><span class="co">##  RcppAnnoy              0.0.16   2020-03-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-127" data-line-number="127"><span class="co">##  RCurl                  1.98-1.2 2020-04-18 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-128" data-line-number="128"><span class="co">##  readr                * 1.3.1    2018-12-21 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-129" data-line-number="129"><span class="co">##  readxl                 1.3.1    2019-03-13 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-130" data-line-number="130"><span class="co">##  remotes                2.1.1    2020-02-15 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-131" data-line-number="131"><span class="co">##  reprex                 0.3.0    2019-05-16 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-132" data-line-number="132"><span class="co">##  reshape2               1.4.4    2020-04-09 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-133" data-line-number="133"><span class="co">##  reticulate             1.15     2020-04-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-134" data-line-number="134"><span class="co">##  rlang                  0.4.6    2020-05-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-135" data-line-number="135"><span class="co">##  rmarkdown              2.1      2020-01-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-136" data-line-number="136"><span class="co">##  ROCR                   1.0-11   2020-05-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-137" data-line-number="137"><span class="co">##  rprojroot              1.3-2    2018-01-03 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-138" data-line-number="138"><span class="co">##  RSpectra               0.16-0   2019-12-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-139" data-line-number="139"><span class="co">##  RSQLite                2.2.0    2020-01-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-140" data-line-number="140"><span class="co">##  rstudioapi             0.11     2020-02-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-141" data-line-number="141"><span class="co">##  rsvd                   1.0.3    2020-02-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-142" data-line-number="142"><span class="co">##  Rtsne                  0.15     2018-11-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-143" data-line-number="143"><span class="co">##  Rttf2pt1               1.3.8    2020-01-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-144" data-line-number="144"><span class="co">##  rvest                  0.3.5    2019-11-08 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-145" data-line-number="145"><span class="co">##  S4Vectors            * 0.26.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-146" data-line-number="146"><span class="co">##  scales                 1.1.1    2020-05-11 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-147" data-line-number="147"><span class="co">##  scater               * 1.16.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-148" data-line-number="148"><span class="co">##  sctransform            0.2.1    2019-12-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-149" data-line-number="149"><span class="co">##  sessioninfo            1.1.1    2018-11-05 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-150" data-line-number="150"><span class="co">##  Seurat               * 3.1.5    2020-04-16 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-151" data-line-number="151"><span class="co">##  SingleCellExperiment * 1.10.1   2020-04-28 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-152" data-line-number="152"><span class="co">##  stringi                1.4.6    2020-02-17 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-153" data-line-number="153"><span class="co">##  stringr              * 1.4.0    2019-02-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-154" data-line-number="154"><span class="co">##  SummarizedExperiment * 1.18.1   2020-04-30 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-155" data-line-number="155"><span class="co">##  survival               3.1-12   2020-04-10 [2] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-156" data-line-number="156"><span class="co">##  testthat               2.3.2    2020-03-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-157" data-line-number="157"><span class="co">##  tibble               * 3.0.1    2020-04-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-158" data-line-number="158"><span class="co">##  tidyr                * 1.0.3    2020-05-07 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-159" data-line-number="159"><span class="co">##  tidyselect             1.0.0    2020-01-27 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-160" data-line-number="160"><span class="co">##  tidyverse            * 1.3.0    2019-11-21 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-161" data-line-number="161"><span class="co">##  tsne                   0.1-3    2016-07-15 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-162" data-line-number="162"><span class="co">##  usethis                1.6.1    2020-04-29 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-163" data-line-number="163"><span class="co">##  uwot                   0.1.8    2020-03-16 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-164" data-line-number="164"><span class="co">##  vctrs                  0.2.4    2020-03-10 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-165" data-line-number="165"><span class="co">##  vipor                  0.4.5    2017-03-22 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-166" data-line-number="166"><span class="co">##  viridis              * 0.5.1    2018-03-29 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-167" data-line-number="167"><span class="co">##  viridisLite          * 0.3.0    2018-02-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-168" data-line-number="168"><span class="co">##  withr                  2.2.0    2020-04-20 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-169" data-line-number="169"><span class="co">##  xfun                   0.13     2020-04-13 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-170" data-line-number="170"><span class="co">##  xml2                   1.3.2    2020-04-23 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-171" data-line-number="171"><span class="co">##  XVector                0.28.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-172" data-line-number="172"><span class="co">##  yaml                   2.2.1    2020-02-01 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-173" data-line-number="173"><span class="co">##  zlibbioc               1.34.0   2020-04-27 [1] Bioconductor  </span></a>
+<a class="sourceLine" id="cb34-174" data-line-number="174"><span class="co">##  zoo                    1.8-8    2020-05-02 [1] CRAN (R 4.0.0)</span></a>
+<a class="sourceLine" id="cb34-175" data-line-number="175"><span class="co">## </span></a>
+<a class="sourceLine" id="cb34-176" data-line-number="176"><span class="co">## [1] D:/R_packages</span></a>
+<a class="sourceLine" id="cb34-177" data-line-number="177"><span class="co">## [2] C:/Program Files/R/R-4.0.0/library</span></a></code></pre></div>
+</details>
+</div>
+<div id="solutions-1" class="section level2">
+<h2><span class="header-section-number">4.14</span> Solutions</h2>
+<ol style="list-style-type: decimal">
+<li>Normalising data, feature selection, dimensionality reduction, clustering. (We don’t have multiple datasets to integrate here)</li>
+<li>Examples of normalisation strategies include: See <a href="https://osca.bioconductor.org/normalization.html">osca</a></li>
+</ol>
+<ul>
+<li>Library size normalisation (dividing by total counts across all genes for each cell)</li>
+<li>Normalisation by spike-ins: using the fact that all cells should have the same number of spike-ins and that the spike-in transcripts respond to biases similarly to the endogeneous genes, we can scale each cell by the spike-in counts</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>We assume that biological variation would result in significant variation in the genes of interest.</li>
+<li>Genes are expressed at different levels. If we do not scale our data, then in subsequent calculations of distance, genes with higher levels of expression will dominate in the analyses.</li>
+<li>Principal component analysis. PCA is an unsupervised learning technique (similar to t-SNE, UMAP) which is used to reduce the dimension of the dataset with minimum loss of information. It does this by explaining the current predictors with a smaller set of variables called principal components, which are obtained from the original via a simple linear transformation.</li>
+<li>t-distributed stochastic neighbor embedding. t-SNE is a non-linear (as opposed to PCA) dimensionality reduction method which focuses on preserving the local structure of the data. This means that points that are close to each other on high-dimensional space will also be close to each other on the lower-dimensional projection. It does not, however, preserve global structure. An important parameter to understand is the perplexity parameter, which is the expected density around each point. For more details, watch this amazing youtube video <a href="https://www.youtube.com/watch?v=NEaUSP4YerM">StatQuest</a></li>
+<li>Uniform Manifold Approximation and Projection. The branch of mathematics is topology.</li>
+<li>Leiden algorithm and SLM algorithm. Adjust the algorithm argument in the <code>FindClusters</code> function.</li>
+<li>It completes the dataset by finding all missing combinations of data.</li>
+</ol>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="quality-control.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="optimisations.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["NMps_book.pdf", "NMps_book.epub"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
