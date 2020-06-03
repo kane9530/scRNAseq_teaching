@@ -45,7 +45,7 @@ plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
 
 The key parameter in k-means clustering is choice of the number of clusters, k. By varying this parameter we can move from coarse-grained to more fine-grained clusters.
 
-```{r, echo=FALSE}
+```{r k-means.different-k, echo=FALSE}
 set.seed(100)
 k <- 3
 clust.kmeans <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=k)
@@ -74,13 +74,13 @@ kmeans_20 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label",add_legend=FALSE
 multiplot(kmeans_3,kmeans_5,kmeans_10,kmeans_20,layout=matrix(seq(4),nrow=2,byrow=TRUE))
 ```
 
-One use of k-means is to deliberately set k to a large value to "overcluster" the data. k-means will happily split up large clusters which graph-based methods try to keep intact, by examining how clusters divide into subclusters can provide some insight on the internal structure of these groups of cells. This is a nice example of the philosophy of using clustering as a tool to interrogate data, rather than a source of 'objective' cell populations.
+One use of k-means is to deliberately set k to a large value to "overcluster" the data. k-means will happily split up large clusters which graph-based methods try to keep intact, by examining how clusters divide into subclusters can provide some insight on the internal structure of these groups of cells. This is a nice example of the philosophy of using clustering as a tool to interrogate data, rather than a method for 'objectively' discovering populations of cells.
 
-So how do we choose a reasonable choice of k?
+#### How do we choose a reasonable k?
 
-One possibility is to use a measure of how well our clusters fit the variation in the data. The gap statistic is the log-ratio of the expected to observed within-cluster sum of squares with larger values representing better clustering. Often instead of choosing the k with the largest gap statistic we will choose the lowest k with a statistic within some threshold of the best statistic we observe.
+We can measure how well our clusters fit the variation in the data and use this to inform our choice of a suitable k. One such measure is the gap statistic which is the log-ratio of the expected to observed within-cluster sum of squares. Larger values of the statistic indicate that the chosen number of clusters has better captured the variation present in the data. Often instead of choosing the k with the largest gap statistic we will choose the lowest k with a statistic within some threshold of the best statistic we observe.
 
-```{r, eval=FALSE, warning=FALSE}
+```{r gap-statistic, eval=TRUE, warning=FALSE}
 library(cluster)
 set.seed(110010101)
 gaps <- clusGap(reducedDim(sce.pbmc, "PCA"), kmeans, K.max=15)
@@ -92,7 +92,7 @@ abline(v=best.k, col="red")
 ```
 Gap statistic with respect to increasing number of k-means clusters in the PBMC dataset. The red line represents the chosen k.
 
-### Which supspace?
+### Which subspace?
 
 The k-means algorithm uses the distance between points to cluster them. which the distances between points and centers. However these distances depend on the space in which our points are lying, so which space should we choose?
 
@@ -102,7 +102,7 @@ After clustering in this higher dimensional space we use the lower dimension $t$
 
 Below we can see the difference between clustering in PCA space vs directly on the two $t$-SNE dimensions. Note how the mixing of cells with different labels in the PCA space plot contrasts with the clean cluster boundaries from $t$-SNE clustering. 
 
-```{r which-subspace}
+```{r which-subspace, echo=FALSE}
 N_centers = 5
 set.seed(100)
 clust.kmeans.pca.space <- kmeans(reducedDim(sce.pbmc, "PCA"), centers=N_centers)
@@ -123,7 +123,7 @@ multiplot(kmeansPlotPcaSpace,kmeansPlotTsneSpace,cols=2)
 
 Graph-based clustering is an increasingly popular family of clustering methods. Instead of directly clustering cells based on their position in a gene expression space these methods use the expression data to build a nearest-neighbours graph and subsequently cluster cells based on the structure of this graph. The graph is constructed by linking each cell to its $k$ nearest neighbours, often weighting the edges by how similar the cells are. This process has better computational scaling than many global methods such as k-means or hierarchical clustering. 
 
-```{r}
+```{r graph-clust-plot}
 g <- buildSNNGraph(sce.pbmc, k=10, use.dimred = 'PCA')
 clust <- igraph::cluster_walktrap(g)$membership
 colLabels(sce.pbmc) <- factor(clust)
@@ -139,13 +139,13 @@ There are several important choices to be made when implementing a graph-based c
 
 For example choosing a lower value of $k$, the number of nearest neighbours to consider when building the graph, tends to produce 'higher resolution' clustering, with more clusters detected than if a higher value of $k$ were chosen. As with k-means clustering there is no 'right answer' and it is best to use experiment with this parameter to investigate how it effects your results.
 
-```{r, graph-different-k}
+```{r, graph-different-k, echo=FALSE}
 # More resolved.
-g.6 <- buildSNNGraph(sce.pbmc, k=8, use.dimred = 'PCA')
-clust.6 <- igraph::cluster_walktrap(g.8)$membership
-colLabels(sce.pbmc) <- factor(clust.6)
-graph.clust.6 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
-  ggtitle("6 nearest neighbours")
+g.8 <- buildSNNGraph(sce.pbmc, k=8, use.dimred = 'PCA')
+clust.8 <- igraph::cluster_walktrap(g.8)$membership
+colLabels(sce.pbmc) <- factor(clust.8)
+graph.clust.8 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
+  ggtitle("8 nearest neighbours")
 
 # Less resolved.
 g.50 <- buildSNNGraph(sce.pbmc, k=50, use.dimred = 'PCA')
@@ -154,12 +154,12 @@ colLabels(sce.pbmc) <- factor(clust.50)
 graph.clust.50 <- plotReducedDim(sce.pbmc, "TSNE", colour_by="label") +
   ggtitle("50 nearest neighbours")
 
-multiplot(graph.clust.6,graph.clust.50,cols=2)
+multiplot(graph.clust.8,graph.clust.50,cols=2)
 ```
 
 We can directly visualise the underlying graph using a force-directed layout, this effectively provides another dimensionality reduction visualistion alongside $t$-SNE and UMAP.
 
-```{r}
+```{r force-plot}
 set.seed(2000)
 reducedDim(sce.pbmc, "force") <- igraph::layout_with_fr(g)
 plotReducedDim(sce.pbmc, colour_by="label", dimred="force")
