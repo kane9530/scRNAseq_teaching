@@ -2,7 +2,8 @@
 The start of a collection of resources that are useful for learning single-cell RNAseq analysis in R.
 
 ## Online Tutorials
-### scRNA-seq
+### scRNA-seq 
+#### Workflows
 Sanger single cell course:
 https://scrnaseq-course.cog.sanger.ac.uk/website/index.html.
 
@@ -12,10 +13,16 @@ Extensive introduction to sc analysis from some great people, updated regularly:
 Quick and dirty way of analysing sc data:
 [A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5112579/)
 
-### R
+#### Useful packages
+[Seurat](https://satijalab.org/seurat/vignettes.html) is an excellent tool which facilitates the analyses of scRNAseq data. 
+
+### R 
 As with many languages [Codeacademy](https://www.codecademy.com/) is a great place to start particularly the [Learn R series](https://www.codecademy.com/learn/learn-r).
 
 Hadley Wickham's [R for Data Science](https://r4ds.had.co.nz/). Hadley is the author of a number of very popular R packages, particularly within the '[tidyverse](https://www.tidyverse.org)', this guide is a great introduction to some of the tidyverse tools for handling and visualising data in R.
+
+### Rmarkdown
+To get yourself acquainted with Rmarkdown, you can start with documentation in the Rstudio page: [Rmarkdown](https://rmarkdown.rstudio.com/). A more comprehensive guide for the enthusiast can be found in Yihui's [Rmarkdown: The definitive guide](https://bookdown.org/yihui/rmarkdown/)
 
 ## Papers
 - 2018: RNA Sequencing Data: Hitchhiker's Guide to Expression Analysis

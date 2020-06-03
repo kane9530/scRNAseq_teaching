@@ -1,0 +1,8 @@
+# Ignore csv files
+zebrafishNMps/*.csv
+
+# Ignore text files
+zebrafishNMps/*.txt
+
+# Ignore rds files
+zebrafishNMps/*.rds
