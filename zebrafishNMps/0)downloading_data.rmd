@@ -9,10 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r, packages, echo=FALSE}
 library(R.utils)
 library(tidyverse)
+```
 
+Download the zebrafish NMP data to the current working directory.
+
+```{r, download-data}
 urls = c("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&format=file&file=GSM3067194%5F18hpf%2Ecsv%2Egz", "https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&format=file&file=GSM3067194%5F18hpf%5FclustID%2Etxt%2Egz","https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE112294&format=file&file=GSE112294%5FClusterNames%2Ecsv%2Egz")
 
 destination = c("./hpf18_count_matrix.csv.gz", "./hpf18_clustID.txt.gz", "./hpf18_clustNames.csv.gz" )
@@ -21,7 +25,6 @@ for (i in 1:length(urls)){
   download.file(urls[i], destination[i], mode = "wb") 
   gunzip(destination[i])
 }
-
 ```
 
 
