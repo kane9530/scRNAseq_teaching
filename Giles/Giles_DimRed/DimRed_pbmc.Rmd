@@ -1,0 +1,13 @@
+---
+title: "Dimensionality Reduction"
+author: "GHD"
+date: "03/06/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## PCA
+
