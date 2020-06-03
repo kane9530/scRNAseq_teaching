@@ -25,7 +25,7 @@ In R this is done with `set.seed(n)`.
 ## Simulations
 
 
-If we simulate and visualise two sets of gaussian data we can see that they are different as expected.
+If we simulate and visualise two sets of gaussian data we can see that they are different as we might naturally expect.
 
 ```{r simulate-norm-1}
 # Simulate 
@@ -38,9 +38,9 @@ par(mfrow=c(1,2))
 hist(x1)
 hist(x2)
 ```
-This is because after producing the first set of data our PRNG is no longer in the state specified by `set.seed(1)` and so the second dataset will be different.
+This is because after producing the first set of data our PRNG is no longer in the state specified by `set.seed(1)` and so the second call to `rnorm()` will be receive new random numbers and therefore it will be different.
 
-If however we reseed the algorithm after producing the first dataset we will produce exactly the same set of pseudorandom numbers:
+If however, we reseed the algorithm after producing the first dataset we will produce exactly the same set of pseudorandom numbers:
 
 ```{r simulate-norm-2}
 # Set random seed to 1.
@@ -96,7 +96,7 @@ set.seed(1)
 ignore <- runif(1)
 seq2 <- runif(5)
 
-df <- data.frame(Seq1=c(old,NA),Seq2=c(NA,new))
+df <- data.frame(Seq1=c(seq1,NA),Seq2=c(NA,seq2))
 knitr::kable(df,digits=3,row.names=TRUE)
 ```
 
