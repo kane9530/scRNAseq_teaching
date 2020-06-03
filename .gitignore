@@ -1,6 +1,0 @@
-# Ignore csv files
-zebrafishNMps/*.csv
-
-# Ignore text files
-zebrafishNMps/*.txt
-
