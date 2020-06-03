@@ -22,7 +22,7 @@ We will use the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomi
 For simplicity we will load the data as a `SingleCellExperiment` object from a saved `.rds` file. This data has already had some basic QC, normalisation, and dimensionality reduction applied.
 
 ```{r load_data}
-sce.pbmc <- readRDS("pbmc_preproc.rds")
+sce.pbmc <- readRDS("../data/pbmc_preproc.rds")
 ```
 
 ## Clustering
