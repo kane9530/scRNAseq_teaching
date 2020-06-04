@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 3 Quality Control | NMps_book.utf8</title>
+  <title>Chapter 3 Quality Control | scRNAseq_NMps.utf8</title>
   <meta name="description" content="" />
   <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 3 Quality Control | NMps_book.utf8" />
+  <meta property="og:title" content="Chapter 3 Quality Control | scRNAseq_NMps.utf8" />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 3 Quality Control | NMps_book.utf8" />
+  <meta name="twitter:title" content="Chapter 3 Quality Control | scRNAseq_NMps.utf8" />
   
   
   
@@ -126,10 +126,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
       <nav role="navigation">
 
 <ul class="summary">
-<li><a href="./">A Minimal Book Example</a></li>
+<li><a href="./"> Hands-on guide to single cell RNA seq analysis in R</a></li>
 
 <li class="divider"></li>
-<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Preface</a></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Introduction</a><ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#objectives"><i class="fa fa-check"></i><b>1.1</b> Objectives</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#description"><i class="fa fa-check"></i><b>1.2</b> Description:</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#links"><i class="fa fa-check"></i><b>1.3</b> Links</a></li>
+<li class="chapter" data-level="1.4" data-path="index.html"><a href="index.html#created-by"><i class="fa fa-check"></i><b>1.4</b> Created by:</a></li>
+</ul></li>
 <li class="chapter" data-level="2" data-path="downloading-data.html"><a href="downloading-data.html"><i class="fa fa-check"></i><b>2</b> Downloading data</a></li>
 <li class="chapter" data-level="3" data-path="quality-control.html"><a href="quality-control.html"><i class="fa fa-check"></i><b>3</b> Quality Control</a><ul>
 <li class="chapter" data-level="3.1" data-path="quality-control.html"><a href="quality-control.html#overview"><i class="fa fa-check"></i><b>3.1</b> Overview</a></li>
@@ -144,7 +149,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="3.10" data-path="quality-control.html"><a href="quality-control.html#solutions"><i class="fa fa-check"></i><b>3.10</b> Solutions</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="clustering.html"><a href="clustering.html"><i class="fa fa-check"></i><b>4</b> Clustering</a><ul>
-<li class="chapter" data-level="4.1" data-path="clustering.html"><a href="clustering.html#introduction"><i class="fa fa-check"></i><b>4.1</b> Introduction</a></li>
+<li class="chapter" data-level="4.1" data-path="clustering.html"><a href="clustering.html#introduction-1"><i class="fa fa-check"></i><b>4.1</b> Introduction</a></li>
 <li class="chapter" data-level="4.2" data-path="clustering.html"><a href="clustering.html#importing-libraries-1"><i class="fa fa-check"></i><b>4.2</b> Importing libraries</a></li>
 <li class="chapter" data-level="4.3" data-path="clustering.html"><a href="clustering.html#importing-data"><i class="fa fa-check"></i><b>4.3</b> Importing Data</a></li>
 <li class="chapter" data-level="4.4" data-path="clustering.html"><a href="clustering.html#useful-seurat-object-interaction-methods"><i class="fa fa-check"></i><b>4.4</b> Useful seurat object interaction methods</a></li>
@@ -163,54 +168,78 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li class="chapter" data-level="4.13" data-path="clustering.html"><a href="clustering.html#session-info-1"><i class="fa fa-check"></i><b>4.13</b> Session Info</a></li>
 <li class="chapter" data-level="4.14" data-path="clustering.html"><a href="clustering.html#solutions-1"><i class="fa fa-check"></i><b>4.14</b> Solutions</a></li>
 </ul></li>
-<li class="chapter" data-level="5" data-path="optimisations.html"><a href="optimisations.html"><i class="fa fa-check"></i><b>5</b> Optimisations</a><ul>
-<li class="chapter" data-level="5.1" data-path="optimisations.html"><a href="optimisations.html#importing-libraries-2"><i class="fa fa-check"></i><b>5.1</b> Importing libraries</a></li>
-<li class="chapter" data-level="5.2" data-path="optimisations.html"><a href="optimisations.html#importing-data-1"><i class="fa fa-check"></i><b>5.2</b> Importing Data</a></li>
-<li class="chapter" data-level="5.3" data-path="optimisations.html"><a href="optimisations.html#number-of-pcs-to-retain"><i class="fa fa-check"></i><b>5.3</b> Number of PCs to retain</a><ul>
-<li class="chapter" data-level="5.3.1" data-path="optimisations.html"><a href="optimisations.html#scree-plot"><i class="fa fa-check"></i><b>5.3.1</b> Scree plot</a></li>
-<li class="chapter" data-level="5.3.2" data-path="optimisations.html"><a href="optimisations.html#examining-technical-noise"><i class="fa fa-check"></i><b>5.3.2</b> Examining technical noise</a></li>
+<li class="chapter" data-level="5" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html"><i class="fa fa-check"></i><b>5</b> Differentially Expressed Genes</a><ul>
+<li class="chapter" data-level="5.1" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualisation-of-marker-genes-in-our-dataset"><i class="fa fa-check"></i><b>5.1</b> Visualisation of marker genes in our dataset</a></li>
+<li class="chapter" data-level="5.2" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#obtaining-a-list-of-differentially-expressed-genes"><i class="fa fa-check"></i><b>5.2</b> Obtaining a list of differentially expressed genes</a></li>
+<li class="chapter" data-level="5.3" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#analysing-output-of-the-wilcoxon-test"><i class="fa fa-check"></i><b>5.3</b> Analysing output of the wilcoxon test</a></li>
+<li class="chapter" data-level="5.4" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualising-the-expression-of-the-marker-genes"><i class="fa fa-check"></i><b>5.4</b> Visualising the expression of the marker genes</a></li>
+<li class="chapter" data-level="5.5" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#session-info-2"><i class="fa fa-check"></i><b>5.5</b> Session Info</a></li>
+<li class="chapter" data-level="5.6" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#solutions-2"><i class="fa fa-check"></i><b>5.6</b> Solutions</a></li>
 </ul></li>
-<li class="chapter" data-level="5.4" data-path="optimisations.html"><a href="optimisations.html#evaluating-clustering-results"><i class="fa fa-check"></i><b>5.4</b> Evaluating clustering results</a><ul>
-<li class="chapter" data-level="5.4.1" data-path="optimisations.html"><a href="optimisations.html#cluster-stability"><i class="fa fa-check"></i><b>5.4.1</b> Cluster stability</a></li>
-<li class="chapter" data-level="5.4.2" data-path="optimisations.html"><a href="optimisations.html#cluster-separability"><i class="fa fa-check"></i><b>5.4.2</b> Cluster separability</a></li>
+<li class="chapter" data-level="6" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html"><i class="fa fa-check"></i><b>6</b> Exploring dimensionality reduction</a><ul>
+<li class="chapter" data-level="6.1" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html#load-data"><i class="fa fa-check"></i><b>6.1</b> Load Data</a></li>
+<li class="chapter" data-level="6.2" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html#pca"><i class="fa fa-check"></i><b>6.2</b> PCA</a></li>
+<li class="chapter" data-level="6.3" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html#t-stochastic-neighbor-embedding"><i class="fa fa-check"></i><b>6.3</b> <span class="math inline">\(t\)</span>-stochastic neighbor embedding</a></li>
+<li class="chapter" data-level="6.4" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html#umap"><i class="fa fa-check"></i><b>6.4</b> UMAP</a></li>
+<li class="chapter" data-level="6.5" data-path="exploring-dimensionality-reduction.html"><a href="exploring-dimensionality-reduction.html#bibliography"><i class="fa fa-check"></i><b>6.5</b> Bibliography</a></li>
 </ul></li>
-<li class="chapter" data-level="5.5" data-path="optimisations.html"><a href="optimisations.html#comparison-with-authors-labels"><i class="fa fa-check"></i><b>5.5</b> Comparison with authors’ labels</a><ul>
-<li class="chapter" data-level="5.5.1" data-path="optimisations.html"><a href="optimisations.html#concordance-in-tailbud-cluster-assignment"><i class="fa fa-check"></i><b>5.5.1</b> Concordance in tailbud cluster assignment</a></li>
-<li class="chapter" data-level="5.5.2" data-path="optimisations.html"><a href="optimisations.html#optimising-the-seurat-clustering-parameters"><i class="fa fa-check"></i><b>5.5.2</b> Optimising the seurat clustering parameters</a></li>
+<li class="chapter" data-level="7" data-path="exploring-clustering.html"><a href="exploring-clustering.html"><i class="fa fa-check"></i><b>7</b> Exploring clustering</a><ul>
+<li class="chapter" data-level="7.1" data-path="exploring-clustering.html"><a href="exploring-clustering.html#load-data-1"><i class="fa fa-check"></i><b>7.1</b> Load Data</a></li>
+<li class="chapter" data-level="7.2" data-path="exploring-clustering.html"><a href="exploring-clustering.html#clustering-2"><i class="fa fa-check"></i><b>7.2</b> Clustering</a></li>
+<li class="chapter" data-level="7.3" data-path="exploring-clustering.html"><a href="exploring-clustering.html#k-means"><i class="fa fa-check"></i><b>7.3</b> k-means</a><ul>
+<li class="chapter" data-level="7.3.1" data-path="exploring-clustering.html"><a href="exploring-clustering.html#choosing-k"><i class="fa fa-check"></i><b>7.3.1</b> Choosing k</a></li>
+<li class="chapter" data-level="7.3.2" data-path="exploring-clustering.html"><a href="exploring-clustering.html#which-subspace"><i class="fa fa-check"></i><b>7.3.2</b> Which subspace?</a></li>
 </ul></li>
-<li class="chapter" data-level="5.6" data-path="optimisations.html"><a href="optimisations.html#selecting-cells-for-downstream-analysis"><i class="fa fa-check"></i><b>5.6</b> Selecting cells for downstream analysis</a></li>
-<li class="chapter" data-level="5.7" data-path="optimisations.html"><a href="optimisations.html#session-info-2"><i class="fa fa-check"></i><b>5.7</b> Session Info</a></li>
+<li class="chapter" data-level="7.4" data-path="exploring-clustering.html"><a href="exploring-clustering.html#graph-based-clustering"><i class="fa fa-check"></i><b>7.4</b> Graph-based clustering</a><ul>
+<li class="chapter" data-level="7.4.1" data-path="exploring-clustering.html"><a href="exploring-clustering.html#force-directed-layout"><i class="fa fa-check"></i><b>7.4.1</b> Force-directed layout</a></li>
 </ul></li>
-<li class="chapter" data-level="6" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html"><i class="fa fa-check"></i><b>6</b> Differentially Expressed Genes</a><ul>
-<li class="chapter" data-level="6.1" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualisation-of-marker-genes-in-our-dataset"><i class="fa fa-check"></i><b>6.1</b> Visualisation of marker genes in our dataset</a></li>
-<li class="chapter" data-level="6.2" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#obtaining-a-list-of-differentially-expressed-genes"><i class="fa fa-check"></i><b>6.2</b> Obtaining a list of differentially expressed genes</a></li>
-<li class="chapter" data-level="6.3" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#analysing-output-of-the-wilcoxon-test"><i class="fa fa-check"></i><b>6.3</b> Analysing output of the wilcoxon test</a></li>
-<li class="chapter" data-level="6.4" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#visualising-the-expression-of-the-marker-genes"><i class="fa fa-check"></i><b>6.4</b> Visualising the expression of the marker genes</a></li>
-<li class="chapter" data-level="6.5" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#session-info-3"><i class="fa fa-check"></i><b>6.5</b> Session Info</a></li>
-<li class="chapter" data-level="6.6" data-path="differentially-expressed-genes.html"><a href="differentially-expressed-genes.html#solutions-2"><i class="fa fa-check"></i><b>6.6</b> Solutions</a></li>
+<li class="chapter" data-level="7.5" data-path="exploring-clustering.html"><a href="exploring-clustering.html#bibliography-1"><i class="fa fa-check"></i><b>7.5</b> Bibliography</a></li>
 </ul></li>
-<li class="chapter" data-level="7" data-path="subclustering.html"><a href="subclustering.html"><i class="fa fa-check"></i><b>7</b> Subclustering</a><ul>
-<li class="chapter" data-level="7.1" data-path="subclustering.html"><a href="subclustering.html#importing-libraries-3"><i class="fa fa-check"></i><b>7.1</b> Importing libraries</a></li>
-<li class="chapter" data-level="7.2" data-path="subclustering.html"><a href="subclustering.html#importing-data-2"><i class="fa fa-check"></i><b>7.2</b> Importing Data</a></li>
-<li class="chapter" data-level="7.3" data-path="subclustering.html"><a href="subclustering.html#subclustering-the-tb-cells---using-only-cells-that-are-assigned-to-the-shared-cluster-across-all-the-clustering-resolutions."><i class="fa fa-check"></i><b>7.3</b> Subclustering the TB cells - Using only cells that are assigned to the ‘shared’ cluster across all the clustering resolutions.</a></li>
-<li class="chapter" data-level="7.4" data-path="subclustering.html"><a href="subclustering.html#dimensional-reduction-with-umap-and-clustering"><i class="fa fa-check"></i><b>7.4</b> Dimensional reduction with UMAP and clustering</a></li>
-<li class="chapter" data-level="7.5" data-path="subclustering.html"><a href="subclustering.html#identifying-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>7.5</b> Identifying marker genes for each cluster</a></li>
-<li class="chapter" data-level="7.6" data-path="subclustering.html"><a href="subclustering.html#merging-clusters-that-do-not-appear-distinct"><i class="fa fa-check"></i><b>7.6</b> Merging clusters that do not appear distinct</a></li>
-<li class="chapter" data-level="7.7" data-path="subclustering.html"><a href="subclustering.html#plotting-umap-and-assigning-cluster-labels"><i class="fa fa-check"></i><b>7.7</b> Plotting UMAP and assigning cluster labels</a></li>
-<li class="chapter" data-level="7.8" data-path="subclustering.html"><a href="subclustering.html#checking-the-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>7.8</b> Checking the marker genes for each cluster</a></li>
-<li class="chapter" data-level="7.9" data-path="subclustering.html"><a href="subclustering.html#sox2-tbxta-coexpression"><i class="fa fa-check"></i><b>7.9</b> Sox2 tbxta coexpression</a></li>
-<li class="chapter" data-level="7.10" data-path="subclustering.html"><a href="subclustering.html#viewing-genes-of-interest-with-a-dotplot"><i class="fa fa-check"></i><b>7.10</b> Viewing genes of interest with a dotplot</a></li>
-<li class="chapter" data-level="7.11" data-path="subclustering.html"><a href="subclustering.html#exporting-the-violin-plots-for-genes-of-interest."><i class="fa fa-check"></i><b>7.11</b> Exporting the violin plots for genes of interest.</a></li>
-<li class="chapter" data-level="7.12" data-path="subclustering.html"><a href="subclustering.html#saving-rds-object-1"><i class="fa fa-check"></i><b>7.12</b> Saving RDS object</a></li>
-<li class="chapter" data-level="7.13" data-path="subclustering.html"><a href="subclustering.html#session-info-4"><i class="fa fa-check"></i><b>7.13</b> Session Info</a></li>
-<li class="chapter" data-level="7.14" data-path="subclustering.html"><a href="subclustering.html#solutions-3"><i class="fa fa-check"></i><b>7.14</b> Solutions</a></li>
+<li class="chapter" data-level="8" data-path="optimisations.html"><a href="optimisations.html"><i class="fa fa-check"></i><b>8</b> Optimisations</a><ul>
+<li class="chapter" data-level="8.1" data-path="optimisations.html"><a href="optimisations.html#importing-libraries-2"><i class="fa fa-check"></i><b>8.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="8.2" data-path="optimisations.html"><a href="optimisations.html#importing-data-1"><i class="fa fa-check"></i><b>8.2</b> Importing Data</a></li>
+<li class="chapter" data-level="8.3" data-path="optimisations.html"><a href="optimisations.html#number-of-pcs-to-retain"><i class="fa fa-check"></i><b>8.3</b> Number of PCs to retain</a><ul>
+<li class="chapter" data-level="8.3.1" data-path="optimisations.html"><a href="optimisations.html#scree-plot"><i class="fa fa-check"></i><b>8.3.1</b> Scree plot</a></li>
+<li class="chapter" data-level="8.3.2" data-path="optimisations.html"><a href="optimisations.html#examining-technical-noise"><i class="fa fa-check"></i><b>8.3.2</b> Examining technical noise</a></li>
 </ul></li>
-<li class="chapter" data-level="8" data-path="pseudotime.html"><a href="pseudotime.html"><i class="fa fa-check"></i><b>8</b> Pseudotime</a><ul>
-<li class="chapter" data-level="8.1" data-path="pseudotime.html"><a href="pseudotime.html#importing-libraries-4"><i class="fa fa-check"></i><b>8.1</b> Importing libraries</a></li>
-<li class="chapter" data-level="8.2" data-path="pseudotime.html"><a href="pseudotime.html#importing-data-3"><i class="fa fa-check"></i><b>8.2</b> Importing data</a></li>
-<li class="chapter" data-level="8.3" data-path="pseudotime.html"><a href="pseudotime.html#tradeseq-workflow-analyses"><i class="fa fa-check"></i><b>8.3</b> TradeSeq workflow analyses</a></li>
-<li class="chapter" data-level="8.4" data-path="pseudotime.html"><a href="pseudotime.html#session-info-5"><i class="fa fa-check"></i><b>8.4</b> Session Info</a></li>
-<li class="chapter" data-level="8.5" data-path="pseudotime.html"><a href="pseudotime.html#solutions-4"><i class="fa fa-check"></i><b>8.5</b> Solutions</a></li>
+<li class="chapter" data-level="8.4" data-path="optimisations.html"><a href="optimisations.html#evaluating-clustering-results"><i class="fa fa-check"></i><b>8.4</b> Evaluating clustering results</a><ul>
+<li class="chapter" data-level="8.4.1" data-path="optimisations.html"><a href="optimisations.html#cluster-stability"><i class="fa fa-check"></i><b>8.4.1</b> Cluster stability</a></li>
+<li class="chapter" data-level="8.4.2" data-path="optimisations.html"><a href="optimisations.html#cluster-separability"><i class="fa fa-check"></i><b>8.4.2</b> Cluster separability</a></li>
+</ul></li>
+<li class="chapter" data-level="8.5" data-path="optimisations.html"><a href="optimisations.html#comparison-with-authors-labels"><i class="fa fa-check"></i><b>8.5</b> Comparison with authors’ labels</a><ul>
+<li class="chapter" data-level="8.5.1" data-path="optimisations.html"><a href="optimisations.html#concordance-in-tailbud-cluster-assignment"><i class="fa fa-check"></i><b>8.5.1</b> Concordance in tailbud cluster assignment</a></li>
+<li class="chapter" data-level="8.5.2" data-path="optimisations.html"><a href="optimisations.html#optimising-the-seurat-clustering-parameters"><i class="fa fa-check"></i><b>8.5.2</b> Optimising the seurat clustering parameters</a></li>
+</ul></li>
+<li class="chapter" data-level="8.6" data-path="optimisations.html"><a href="optimisations.html#selecting-cells-for-downstream-analysis"><i class="fa fa-check"></i><b>8.6</b> Selecting cells for downstream analysis</a></li>
+<li class="chapter" data-level="8.7" data-path="optimisations.html"><a href="optimisations.html#session-info-3"><i class="fa fa-check"></i><b>8.7</b> Session Info</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="subclustering.html"><a href="subclustering.html"><i class="fa fa-check"></i><b>9</b> Subclustering</a><ul>
+<li class="chapter" data-level="9.1" data-path="subclustering.html"><a href="subclustering.html#importing-libraries-3"><i class="fa fa-check"></i><b>9.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="9.2" data-path="subclustering.html"><a href="subclustering.html#importing-data-2"><i class="fa fa-check"></i><b>9.2</b> Importing Data</a></li>
+<li class="chapter" data-level="9.3" data-path="subclustering.html"><a href="subclustering.html#subclustering-the-tb-cells---using-only-cells-that-are-assigned-to-the-shared-cluster-across-all-the-clustering-resolutions."><i class="fa fa-check"></i><b>9.3</b> Subclustering the TB cells - Using only cells that are assigned to the ‘shared’ cluster across all the clustering resolutions.</a></li>
+<li class="chapter" data-level="9.4" data-path="subclustering.html"><a href="subclustering.html#dimensional-reduction-with-umap-and-clustering"><i class="fa fa-check"></i><b>9.4</b> Dimensional reduction with UMAP and clustering</a></li>
+<li class="chapter" data-level="9.5" data-path="subclustering.html"><a href="subclustering.html#identifying-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>9.5</b> Identifying marker genes for each cluster</a></li>
+<li class="chapter" data-level="9.6" data-path="subclustering.html"><a href="subclustering.html#merging-clusters-that-do-not-appear-distinct"><i class="fa fa-check"></i><b>9.6</b> Merging clusters that do not appear distinct</a></li>
+<li class="chapter" data-level="9.7" data-path="subclustering.html"><a href="subclustering.html#plotting-umap-and-assigning-cluster-labels"><i class="fa fa-check"></i><b>9.7</b> Plotting UMAP and assigning cluster labels</a></li>
+<li class="chapter" data-level="9.8" data-path="subclustering.html"><a href="subclustering.html#checking-the-marker-genes-for-each-cluster"><i class="fa fa-check"></i><b>9.8</b> Checking the marker genes for each cluster</a></li>
+<li class="chapter" data-level="9.9" data-path="subclustering.html"><a href="subclustering.html#sox2-tbxta-coexpression"><i class="fa fa-check"></i><b>9.9</b> Sox2 tbxta coexpression</a></li>
+<li class="chapter" data-level="9.10" data-path="subclustering.html"><a href="subclustering.html#viewing-genes-of-interest-with-a-dotplot"><i class="fa fa-check"></i><b>9.10</b> Viewing genes of interest with a dotplot</a></li>
+<li class="chapter" data-level="9.11" data-path="subclustering.html"><a href="subclustering.html#exporting-the-violin-plots-for-genes-of-interest."><i class="fa fa-check"></i><b>9.11</b> Exporting the violin plots for genes of interest.</a></li>
+<li class="chapter" data-level="9.12" data-path="subclustering.html"><a href="subclustering.html#saving-rds-object-1"><i class="fa fa-check"></i><b>9.12</b> Saving RDS object</a></li>
+<li class="chapter" data-level="9.13" data-path="subclustering.html"><a href="subclustering.html#session-info-4"><i class="fa fa-check"></i><b>9.13</b> Session Info</a></li>
+<li class="chapter" data-level="9.14" data-path="subclustering.html"><a href="subclustering.html#solutions-3"><i class="fa fa-check"></i><b>9.14</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="pseudotime.html"><a href="pseudotime.html"><i class="fa fa-check"></i><b>10</b> Pseudotime</a><ul>
+<li class="chapter" data-level="10.1" data-path="pseudotime.html"><a href="pseudotime.html#importing-libraries-4"><i class="fa fa-check"></i><b>10.1</b> Importing libraries</a></li>
+<li class="chapter" data-level="10.2" data-path="pseudotime.html"><a href="pseudotime.html#importing-data-3"><i class="fa fa-check"></i><b>10.2</b> Importing data</a></li>
+<li class="chapter" data-level="10.3" data-path="pseudotime.html"><a href="pseudotime.html#tradeseq-workflow-analyses"><i class="fa fa-check"></i><b>10.3</b> TradeSeq workflow analyses</a></li>
+<li class="chapter" data-level="10.4" data-path="pseudotime.html"><a href="pseudotime.html#session-info-5"><i class="fa fa-check"></i><b>10.4</b> Session Info</a></li>
+<li class="chapter" data-level="10.5" data-path="pseudotime.html"><a href="pseudotime.html#solutions-4"><i class="fa fa-check"></i><b>10.5</b> Solutions</a></li>
+</ul></li>
+<li class="chapter" data-level="11" data-path="random-seeds.html"><a href="random-seeds.html"><i class="fa fa-check"></i><b>11</b> Random seeds</a><ul>
+<li class="chapter" data-level="11.1" data-path="random-seeds.html"><a href="random-seeds.html#what-is-a-random-seed"><i class="fa fa-check"></i><b>11.1</b> What is a random seed?</a></li>
+<li class="chapter" data-level="11.2" data-path="random-seeds.html"><a href="random-seeds.html#simulations"><i class="fa fa-check"></i><b>11.2</b> Simulations</a></li>
+<li class="chapter" data-level="11.3" data-path="random-seeds.html"><a href="random-seeds.html#box-muller-transform"><i class="fa fa-check"></i><b>11.3</b> Box-Muller transform</a></li>
 </ul></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -342,7 +371,7 @@ Figure 3.1: Figure 1: Schematic of a typical scRNA-seq analysis workflow. Each s
 <a class="sourceLine" id="cb13-12" data-line-number="12"><span class="st">        </span><span class="kw">scale_y_log10</span>() <span class="op">+</span><span class="st"> </span><span class="kw">ggtitle</span>(<span class="st">&quot;Detected features&quot;</span>)</a>
 <a class="sourceLine" id="cb13-13" data-line-number="13">)</a></code></pre></div>
 <div class="figure"><span id="fig:unnamed-chunk-6"></span>
-<img src="NMps_book_files/figure-html/unnamed-chunk-6-1.png" alt="Figure 2: Quality control plots from the 18hpf zebrafish data, with the total RNA count and detected features as the quality metrics. Each point is a cell and colored according to whether it is identified as an outlier within each batch (library names) or not." width="672" />
+<img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-6-1.png" alt="Figure 2: Quality control plots from the 18hpf zebrafish data, with the total RNA count and detected features as the quality metrics. Each point is a cell and colored according to whether it is identified as an outlier within each batch (library names) or not." width="672" />
 <p class="caption">
 Figure 3.2: Figure 2: Quality control plots from the 18hpf zebrafish data, with the total RNA count and detected features as the quality metrics. Each point is a cell and colored according to whether it is identified as an outlier within each batch (library names) or not.
 </p>
@@ -393,7 +422,7 @@ Figure 3.2: Figure 2: Quality control plots from the 18hpf zebrafish data, with 
 <a class="sourceLine" id="cb21-9" data-line-number="9"><span class="co">##  collate  English_United Kingdom.1252 </span></a>
 <a class="sourceLine" id="cb21-10" data-line-number="10"><span class="co">##  ctype    English_United Kingdom.1252 </span></a>
 <a class="sourceLine" id="cb21-11" data-line-number="11"><span class="co">##  tz       Asia/Kuala_Lumpur           </span></a>
-<a class="sourceLine" id="cb21-12" data-line-number="12"><span class="co">##  date     2020-06-03                  </span></a>
+<a class="sourceLine" id="cb21-12" data-line-number="12"><span class="co">##  date     2020-06-04                  </span></a>
 <a class="sourceLine" id="cb21-13" data-line-number="13"><span class="co">## </span></a>
 <a class="sourceLine" id="cb21-14" data-line-number="14"><span class="co">## - Packages -------------------------------------------------------------------</span></a>
 <a class="sourceLine" id="cb21-15" data-line-number="15"><span class="co">##  package              * version  date       lib source        </span></a>
@@ -576,7 +605,7 @@ gitbook.start({
 "link": null,
 "text": null
 },
-"download": ["NMps_book.pdf", "NMps_book.epub"],
+"download": ["scRNAseq_NMps.pdf", "scRNAseq_NMps.epub"],
 "toc": {
 "collapse": "subsection"
 }

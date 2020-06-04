@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 2 Downloading data | scRNAseq_NMps.utf8</title>
+  <title>Chapter 7 Exploring clustering | scRNAseq_NMps.utf8</title>
   <meta name="description" content="" />
   <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta property="og:title" content="Chapter 7 Exploring clustering | scRNAseq_NMps.utf8" />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta name="twitter:title" content="Chapter 7 Exploring clustering | scRNAseq_NMps.utf8" />
   
   
   
@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html"/>
-<link rel="next" href="quality-control.html"/>
+<link rel="prev" href="exploring-dimensionality-reduction.html"/>
+<link rel="next" href="optimisations.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -261,27 +261,103 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="downloading-data" class="section level1">
-<h1><span class="header-section-number">Chapter 2</span> Downloading data</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(R.utils)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(tidyverse)</a></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">urls =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%2Ecsv%2Egz&quot;</span>, <span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%5FclustID%2Etxt%2Egz&quot;</span>,<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE112294&amp;format=file&amp;file=GSE112294%5FClusterNames%2Ecsv%2Egz&quot;</span>)</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">destination =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;./hpf18_count_matrix.csv.gz&quot;</span>, <span class="st">&quot;./hpf18_clustID.txt.gz&quot;</span>, <span class="st">&quot;./hpf18_clustNames.csv.gz&quot;</span> )</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(urls)){</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="kw">download.file</span>(urls[i], destination[i], <span class="dt">mode =</span> <span class="st">&quot;wb&quot;</span>) </a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">  <span class="kw">gunzip</span>(destination[i])</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">}</a></code></pre></div>
+<div id="exploring-clustering" class="section level1">
+<h1><span class="header-section-number">Chapter 7</span> Exploring clustering</h1>
+<div class="sourceCode" id="cb76"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb76-1" data-line-number="1"><span class="kw">library</span>(scater)</a>
+<a class="sourceLine" id="cb76-2" data-line-number="2"><span class="kw">library</span>(scran)</a></code></pre></div>
+<p>Large sections of this document are adapted from <a href="https://osca.bioconductor.org/clustering.html">Orchestrating Singe-Cell Analysis</a>.</p>
+<div id="load-data-1" class="section level2">
+<h2><span class="header-section-number">7.1</span> Load Data</h2>
+<p>We will use the peripheral blood mononuclear cell (PBMC) dataset from 10X Genomics (Zheng et al. 2017).</p>
+<p>For simplicity we will load the data as a <code>SingleCellExperiment</code> object from a saved <code>.rds</code> file. This data has already had some basic QC, normalisation, and dimensionality reduction applied.</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb77-1" data-line-number="1">sce.pbmc &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;./data/pbmc_preproc.rds&quot;</span>)</a></code></pre></div>
+</div>
+<div id="clustering-2" class="section level2">
+<h2><span class="header-section-number">7.2</span> Clustering</h2>
+<p>The most important thing to remember about clustering is that by choosing the right algorithm and representation of our data we can get any groupings we please. Clustering is just one of many tools we have to explore data and the perspectives it offers are only as reasonable as the choices and assumptions that underlie them.</p>
+</div>
+<div id="k-means" class="section level2">
+<h2><span class="header-section-number">7.3</span> k-means</h2>
+<p>There are many good <a href="https://blog.easysol.net/machine-learning-algorithms-3">explanations</a> and <a href="https://www.naftaliharris.com/blog/visualizing-k-means-clustering/">visualisations</a> of how the k-means algorithm works online so I won’t go into much detail here. The objective of the algorithm is to assign each point to a cluster in such a way that minimizes the sum of the squared distances between each point and the average position of all of the points which are assigned to its cluster.</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb78-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb78-2" data-line-number="2">clust.kmeans &lt;-<span class="st"> </span><span class="kw">kmeans</span>(<span class="kw">reducedDim</span>(sce.pbmc, <span class="st">&quot;PCA&quot;</span>), <span class="dt">centers=</span><span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb78-3" data-line-number="3"><span class="kw">colLabels</span>(sce.pbmc) &lt;-<span class="st"> </span><span class="kw">factor</span>(clust.kmeans<span class="op">$</span>cluster)</a>
+<a class="sourceLine" id="cb78-4" data-line-number="4"><span class="kw">plotReducedDim</span>(sce.pbmc, <span class="st">&quot;TSNE&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;label&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb78-5" data-line-number="5"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;k-mean Clustering&quot;</span>)</a></code></pre></div>
+<div class="figure"><span id="fig:unnamed-chunk-26"></span>
+<img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-26-1.png" alt="t-SNE plot of the PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering." width="672" />
+<p class="caption">
+Figure 7.1: t-SNE plot of the PBMC dataset, where each point represents a cell and is coloured according to the identity of the assigned cluster from k-means clustering.
+</p>
+</div>
+<div id="choosing-k" class="section level3">
+<h3><span class="header-section-number">7.3.1</span> Choosing k</h3>
+<p>The key parameter in k-means clustering is choice of the number of clusters, k. By varying this parameter we can move from coarse-grained to more fine-grained clusters.</p>
+<p><img src="scRNAseq_NMps_files/figure-html/k-means.different-k-1.png" width="672" /></p>
+<p>One use of k-means is to deliberately set k to a large value to “overcluster” the data. k-means will happily split up large clusters which graph-based methods try to keep intact, by examining how clusters divide into subclusters can provide some insight on the internal structure of these groups of cells. This is a nice example of the philosophy of using clustering as a tool to interrogate data, rather than a method for ‘objectively’ discovering populations of cells.</p>
+<div id="how-do-we-choose-a-reasonable-k" class="section level4">
+<h4><span class="header-section-number">7.3.1.1</span> How do we choose a reasonable k?</h4>
+<p>We can measure how well our clusters fit the variation in the data and use this to inform our choice of a suitable k. One such measure is the gap statistic which is the log-ratio of the expected to observed within-cluster sum of squares. Larger values of the statistic indicate that the chosen number of clusters has better captured the variation present in the data. Often instead of choosing the k with the largest gap statistic we will choose the lowest k with a statistic within some threshold of the best statistic we observe.</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb79-1" data-line-number="1"><span class="kw">library</span>(cluster)</a>
+<a class="sourceLine" id="cb79-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">110010101</span>)</a>
+<a class="sourceLine" id="cb79-3" data-line-number="3">gaps &lt;-<span class="st"> </span><span class="kw">clusGap</span>(<span class="kw">reducedDim</span>(sce.pbmc, <span class="st">&quot;PCA&quot;</span>), kmeans, <span class="dt">K.max=</span><span class="dv">15</span>)</a>
+<a class="sourceLine" id="cb79-4" data-line-number="4"><span class="co"># Choose the smallest k for which the gap statistic is within 1 SE of the best k.</span></a>
+<a class="sourceLine" id="cb79-5" data-line-number="5">best.k &lt;-<span class="st"> </span><span class="kw">maxSE</span>(gaps<span class="op">$</span>Tab[,<span class="st">&quot;gap&quot;</span>], gaps<span class="op">$</span>Tab[,<span class="st">&quot;SE.sim&quot;</span>])</a>
+<a class="sourceLine" id="cb79-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb79-7" data-line-number="7"><span class="kw">plot</span>(gaps<span class="op">$</span>Tab[,<span class="st">&quot;gap&quot;</span>], <span class="dt">xlab=</span><span class="st">&quot;Number of clusters&quot;</span>, <span class="dt">ylab=</span><span class="st">&quot;Gap statistic&quot;</span>)</a>
+<a class="sourceLine" id="cb79-8" data-line-number="8"><span class="kw">abline</span>(<span class="dt">v=</span>best.k, <span class="dt">col=</span><span class="st">&quot;red&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/gap-statistic-1.png" width="672" />
+Gap statistic with respect to increasing number of k-means clusters in the PBMC dataset. The red line represents the chosen k.</p>
+</div>
+</div>
+<div id="which-subspace" class="section level3">
+<h3><span class="header-section-number">7.3.2</span> Which subspace?</h3>
+<p>The k-means algorithm uses the distance between points to cluster them. which the distances between points and centers. However these distances depend on the space in which our points are lying, so which space should we choose?</p>
+<p>We might choose the ‘full-space’ in which each dimension corresponds to the expression of a different gene. In the case of the pbmc data we have ~30,000 dimensions in our data. It can be quite computationally expensive to work in this full space. Instead we could perform on the data in a reduced dimensionality space such as PCA, <span class="math inline">\(t\)</span>-SNE, or UMAP. Very low dimensional representations of the data such as 2D <span class="math inline">\(t\)</span>-SNE or UMAP cannot include much of the true variation that exists in the data, if we clustered on them directly we would miss important structure in the data. Therefore usually a compromise is made and clustering is performed on the data in the subspace formed by the first 50-100 PCs from PCA, this hopefully has sufficiently many dimensions to contain most of the important structure in the data while not being too computationally expensive to work with. Furthermore by only using the top PCs we denoise the data by discarding less informative variation.</p>
+<p>After clustering in this higher dimensional space we use the lower dimension <span class="math inline">\(t\)</span>-SNE or UMAP to plot the results.</p>
+<p>Below we can see the difference between clustering in PCA space vs directly on the two <span class="math inline">\(t\)</span>-SNE dimensions. Note how the mixing of cells with different labels in the PCA space plot contrasts with the clean cluster boundaries from <span class="math inline">\(t\)</span>-SNE clustering.</p>
+<p><img src="scRNAseq_NMps_files/figure-html/which-subspace-1.png" width="672" /></p>
+</div>
+</div>
+<div id="graph-based-clustering" class="section level2">
+<h2><span class="header-section-number">7.4</span> Graph-based clustering</h2>
+<p>Graph-based clustering is an increasingly popular family of clustering methods. Instead of directly clustering cells based on their position in a gene expression space these methods use the expression data to build a nearest-neighbours graph and subsequently cluster cells based on the structure of this graph. The graph is constructed by linking each cell to its <span class="math inline">\(k\)</span> nearest neighbours, often weighting the edges by how similar the cells are. This process has better computational scaling than many global methods such as k-means or hierarchical clustering.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb80-1" data-line-number="1">g &lt;-<span class="st"> </span><span class="kw">buildSNNGraph</span>(sce.pbmc, <span class="dt">k=</span><span class="dv">10</span>, <span class="dt">use.dimred =</span> <span class="st">&#39;PCA&#39;</span>)</a>
+<a class="sourceLine" id="cb80-2" data-line-number="2">clust &lt;-<span class="st"> </span>igraph<span class="op">::</span><span class="kw">cluster_walktrap</span>(g)<span class="op">$</span>membership</a>
+<a class="sourceLine" id="cb80-3" data-line-number="3"><span class="kw">colLabels</span>(sce.pbmc) &lt;-<span class="st"> </span><span class="kw">factor</span>(clust)</a>
+<a class="sourceLine" id="cb80-4" data-line-number="4"><span class="kw">plotReducedDim</span>(sce.pbmc, <span class="st">&quot;TSNE&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;label&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb80-5" data-line-number="5"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;10 nearest neighbours&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/graph-clust-plot-1.png" width="672" /></p>
+<p>There are several important choices to be made when implementing a graph-based clustering method:</p>
+<ul>
+<li>How many neighbors are considered when constructing the graph.</li>
+<li>How to weight the edges between connected cells.</li>
+<li>Once we have the graph which algorithm do we use to detect ‘communities’.</li>
+</ul>
+<p>For example choosing a lower value of <span class="math inline">\(k\)</span>, the number of nearest neighbours to consider when building the graph, tends to produce ‘higher resolution’ clustering, with more clusters detected than if a higher value of <span class="math inline">\(k\)</span> were chosen. As with k-means clustering there is no ‘right answer’ and it is best to use experiment with this parameter to investigate how it effects your results.</p>
+<p><img src="scRNAseq_NMps_files/figure-html/graph-different-k-1.png" width="672" /></p>
+<div id="force-directed-layout" class="section level3">
+<h3><span class="header-section-number">7.4.1</span> Force-directed layout</h3>
+<p>We can directly visualise the underlying graph using a force-directed layout, this effectively provides another dimensionality reduction visualistion alongside <span class="math inline">\(t\)</span>-SNE and UMAP.</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb81-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">2000</span>)</a>
+<a class="sourceLine" id="cb81-2" data-line-number="2"><span class="kw">reducedDim</span>(sce.pbmc, <span class="st">&quot;force&quot;</span>) &lt;-<span class="st"> </span>igraph<span class="op">::</span><span class="kw">layout_with_fr</span>(g)</a>
+<a class="sourceLine" id="cb81-3" data-line-number="3"><span class="kw">plotReducedDim</span>(sce.pbmc, <span class="dt">colour_by=</span><span class="st">&quot;label&quot;</span>, <span class="dt">dimred=</span><span class="st">&quot;force&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/force-plot-1.png" width="672" /></p>
+</div>
+</div>
+<div id="bibliography-1" class="section level2">
+<h2><span class="header-section-number">7.5</span> Bibliography</h2>
+<p>Zheng, G. X., J. M. Terry, P. Belgrader, P. Ryvkin, Z. W. Bent, R. Wilson, S. B. Ziraldo, et al. 2017. “Massively parallel digital transcriptional profiling of single cells.” Nat Commun 8 (January): 14049.</p>
 
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="quality-control.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="exploring-dimensionality-reduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="optimisations.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>

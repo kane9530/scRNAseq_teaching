@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 2 Downloading data | scRNAseq_NMps.utf8</title>
+  <title>Chapter 11 Random seeds | scRNAseq_NMps.utf8</title>
   <meta name="description" content="" />
   <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta property="og:title" content="Chapter 11 Random seeds | scRNAseq_NMps.utf8" />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta name="twitter:title" content="Chapter 11 Random seeds | scRNAseq_NMps.utf8" />
   
   
   
@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html"/>
-<link rel="next" href="quality-control.html"/>
+<link rel="prev" href="pseudotime.html"/>
+
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -261,27 +261,226 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="downloading-data" class="section level1">
-<h1><span class="header-section-number">Chapter 2</span> Downloading data</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(R.utils)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(tidyverse)</a></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">urls =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%2Ecsv%2Egz&quot;</span>, <span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%5FclustID%2Etxt%2Egz&quot;</span>,<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE112294&amp;format=file&amp;file=GSE112294%5FClusterNames%2Ecsv%2Egz&quot;</span>)</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">destination =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;./hpf18_count_matrix.csv.gz&quot;</span>, <span class="st">&quot;./hpf18_clustID.txt.gz&quot;</span>, <span class="st">&quot;./hpf18_clustNames.csv.gz&quot;</span> )</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(urls)){</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="kw">download.file</span>(urls[i], destination[i], <span class="dt">mode =</span> <span class="st">&quot;wb&quot;</span>) </a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">  <span class="kw">gunzip</span>(destination[i])</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">}</a></code></pre></div>
+<div id="random-seeds" class="section level1">
+<h1><span class="header-section-number">Chapter 11</span> Random seeds</h1>
+<div id="what-is-a-random-seed" class="section level2">
+<h2><span class="header-section-number">11.1</span> What is a random seed?</h2>
+<p>Computers tend not to use truly random numbers. Instead they use algorithms called pseudorandom number generators (PRNGs) to produce ‘pseudorandom’ numbers.</p>
+<p>PRNGs are deterministic algorithms which produce sequences of numbers which have many of the same statistical properties as truly random sequences.
+They tend to work iteratively, the algorithm has a ‘hidden state’ which acts as an input to a complex transformation to produce an output, each time this occurs the hidden state is updated so that at the next step the algorithm will produce a different output.</p>
+<p>Because they are deterministic if the algorithm is in same state and receives the same input it will produce the same output. This can be a very useful property as often we would like to write some code which uses random numbers but we want to produce the same output every time we run it.</p>
+<p>The <em>seed</em> of a PRNG is a way of determining the starting value of the hidden state. Ordinarily these algorithms will take their seed from a source which is constantly changing, such as the computers clock time, which ensures that each time you produce random numbers they will be different. However we have the option to manually provide a seed to set the initial state.</p>
+<p>In R this is done with <code>set.seed(n)</code>.</p>
+</div>
+<div id="simulations" class="section level2">
+<h2><span class="header-section-number">11.2</span> Simulations</h2>
+<p>If we simulate and visualise two sets of gaussian data we can see that they are different as we might naturally expect.</p>
+<div class="sourceCode" id="cb178"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb178-1" data-line-number="1"><span class="co"># Simulate </span></a>
+<a class="sourceLine" id="cb178-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb178-3" data-line-number="3">x1 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb178-4" data-line-number="4">x2 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb178-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb178-6" data-line-number="6"><span class="co"># Plot</span></a>
+<a class="sourceLine" id="cb178-7" data-line-number="7"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb178-8" data-line-number="8"><span class="kw">hist</span>(x1)</a>
+<a class="sourceLine" id="cb178-9" data-line-number="9"><span class="kw">hist</span>(x2)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/simulate-norm-1-1.png" width="672" />
+This is because after producing the first set of data our PRNG is no longer in the state specified by <code>set.seed(1)</code> and so the second call to <code>rnorm()</code> will be receive new random numbers and therefore it will be different.</p>
+<p>If however, we reseed the algorithm after producing the first dataset we will produce exactly the same set of pseudorandom numbers:</p>
+<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb179-1" data-line-number="1"><span class="co"># Set random seed to 1.</span></a>
+<a class="sourceLine" id="cb179-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb179-3" data-line-number="3">x1 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb179-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb179-5" data-line-number="5"><span class="co"># Reset the random seed to 1.</span></a>
+<a class="sourceLine" id="cb179-6" data-line-number="6"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb179-7" data-line-number="7">x2 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb179-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb179-9" data-line-number="9"><span class="co"># Plot</span></a>
+<a class="sourceLine" id="cb179-10" data-line-number="10"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb179-11" data-line-number="11"><span class="kw">hist</span>(x1)</a>
+<a class="sourceLine" id="cb179-12" data-line-number="12"><span class="kw">hist</span>(x2)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/simulate-norm-2-1.png" width="672" /></p>
+<p>Note the changes in the state of the PRNG only occur when it is used to produce our pseudorandom numbers. Therefore producing 10 gaussian samples with <code>rnorm(10)</code> is equivalent to sequentially producing two sets of 5 samples with <code>rnorm(5)</code> and combining them:</p>
+<div class="sourceCode" id="cb180"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb180-1" data-line-number="1"><span class="co"># Sample all 10 in one command.</span></a>
+<a class="sourceLine" id="cb180-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb180-3" data-line-number="3">x1 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">10</span>)</a>
+<a class="sourceLine" id="cb180-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb180-5" data-line-number="5"><span class="co"># Sample two sets of 5 sequentially.</span></a>
+<a class="sourceLine" id="cb180-6" data-line-number="6"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb180-7" data-line-number="7">y1 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb180-8" data-line-number="8">y2 &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb180-9" data-line-number="9">x2 &lt;-<span class="st"> </span><span class="kw">c</span>(y1,y2)</a>
+<a class="sourceLine" id="cb180-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb180-11" data-line-number="11"><span class="co"># Plot</span></a>
+<a class="sourceLine" id="cb180-12" data-line-number="12"><span class="kw">par</span>(<span class="dt">mfrow=</span><span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">2</span>))</a>
+<a class="sourceLine" id="cb180-13" data-line-number="13"><span class="kw">hist</span>(x1)</a>
+<a class="sourceLine" id="cb180-14" data-line-number="14"><span class="kw">hist</span>(x2)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-45-1.png" width="672" /></p>
+<p>It doesn’t matter what code was used to produce the random numbers, what is important is the state of the PRNG ‘under the hood’.</p>
+<p>This can lead to some slightly unexpected behaviour which we will briefly look at below.</p>
+<p>First lets simulate a sequence of numbers from a uniform distribution between 0 and 1, <span class="math inline">\(U(0,1)\)</span>:</p>
+<div class="sourceCode" id="cb181"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb181-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb181-2" data-line-number="2"><span class="kw">runif</span>(<span class="dv">5</span>)</a></code></pre></div>
+<pre><code>## [1] 0.2655087 0.3721239 0.5728534 0.9082078 0.2016819</code></pre>
+<p>When we precede this operation by simulating a single uniformly distributed number it will shift our sequence one forward, the second element moving to the first, the third to the second and so on, with a new number taking the 5th position:</p>
+<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb183-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb183-2" data-line-number="2">seq1 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb183-3" data-line-number="3"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb183-4" data-line-number="4">ignore &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb183-5" data-line-number="5">seq2 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb183-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb183-7" data-line-number="7">df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">Seq1=</span><span class="kw">c</span>(seq1,<span class="ot">NA</span>),<span class="dt">Seq2=</span><span class="kw">c</span>(<span class="ot">NA</span>,seq2))</a>
+<a class="sourceLine" id="cb183-8" data-line-number="8">knitr<span class="op">::</span><span class="kw">kable</span>(df,<span class="dt">digits=</span><span class="dv">3</span>,<span class="dt">row.names=</span><span class="ot">TRUE</span>)</a></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">Seq1</th>
+<th align="right">Seq2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td align="right">0.266</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td align="right">0.372</td>
+<td align="right">0.372</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td align="right">0.573</td>
+<td align="right">0.573</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td align="right">0.908</td>
+<td align="right">0.908</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td align="right">0.202</td>
+<td align="right">0.202</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td align="right">NA</td>
+<td align="right">0.898</td>
+</tr>
+</tbody>
+</table>
+<p>If we peek at the number we discarded we will see that, as we might have expected, it corresponds to the first element of our original sequence:</p>
+<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb184-1" data-line-number="1">ignore</a></code></pre></div>
+<pre><code>## [1] 0.2655087</code></pre>
+<p>So far so good.</p>
+<p>However what will happen if, instead of a uniformly distribution variable, we simulate from a gaussian?</p>
+<div class="sourceCode" id="cb186"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb186-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb186-2" data-line-number="2">seq1 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb186-3" data-line-number="3"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb186-4" data-line-number="4">ignore &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb186-5" data-line-number="5">seq2 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb186-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb186-7" data-line-number="7">df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">Seq1=</span><span class="kw">c</span>(seq1,<span class="kw">rep</span>(<span class="ot">NA</span>,<span class="dv">2</span>)), <span class="dt">Seq2=</span><span class="kw">c</span>(<span class="kw">rep</span>(<span class="ot">NA</span>,<span class="dv">2</span>),seq2))</a>
+<a class="sourceLine" id="cb186-8" data-line-number="8">knitr<span class="op">::</span><span class="kw">kable</span>(df,<span class="dt">digits=</span><span class="dv">3</span>,<span class="dt">row.names=</span><span class="ot">TRUE</span>)</a></code></pre></div>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">Seq1</th>
+<th align="right">Seq2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td align="right">0.266</td>
+<td align="right">NA</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td align="right">0.372</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td align="right">0.573</td>
+<td align="right">0.573</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td align="right">0.908</td>
+<td align="right">0.908</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td align="right">0.202</td>
+<td align="right">0.202</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td align="right">NA</td>
+<td align="right">0.898</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td align="right">NA</td>
+<td align="right">0.945</td>
+</tr>
+</tbody>
+</table>
+<p>This time our samples have been shifted two positions forward! What is going on?</p>
+<p>The answer is a little out of the scope of this tutorial and is highly dependent on what algorithms are being used ‘under the hood’.</p>
+<p>The key lesson from this is that in practice it is very hard to keep track of the internal state of the PRNG. This is important as an analyses might only be reproducible if the PRNG is in exactly the same state when random number are used. Say you have two similar analysis scripts and you want some key algorithms inside to use the same pseudorandom numbers (for example you might want your tSNE plots to be reproducible). It is not sufficient to set the same random seed at the top of the script as it is all too easy to inadvertantly create a divergence in the hidden state of the PRNG in the two scripts. Therefore it is best to reseed the random number generator just before the relevant code and to ensure that any intervening operations are identical.</p>
+</div>
+<div id="box-muller-transform" class="section level2">
+<h2><span class="header-section-number">11.3</span> Box-Muller transform</h2>
+<p>Box-Muller transform converts takes <span class="math inline">\(U_1, U_2 \sim U(0,1)\)</span> and converts them to a point in polar coordinates <span class="math inline">\(R^2 = -2 \ln U_1\)</span>, <span class="math inline">\(\Theta = 2\pi U_2.\)</span> taking the <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> coordinates of this point gives two independent normally distributed variables.</p>
+<p>Thus it produces normal random numbers in pairs, producing a single random variable progresses the state of the PRNG the same amount as producing two:</p>
+<div class="sourceCode" id="cb187"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb187-1" data-line-number="1"><span class="kw">RNGkind</span>(<span class="dt">normal.kind=</span><span class="st">&quot;Box-Muller&quot;</span>)</a>
+<a class="sourceLine" id="cb187-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb187-3" data-line-number="3">seq1 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb187-4" data-line-number="4"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb187-5" data-line-number="5">ignore &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb187-6" data-line-number="6">seq2 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb187-7" data-line-number="7"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb187-8" data-line-number="8">ignore &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb187-9" data-line-number="9">seq3 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb187-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb187-11" data-line-number="11">seq1</a></code></pre></div>
+<pre><code>## [1] 0.2655087 0.3721239 0.5728534 0.9082078 0.2016819</code></pre>
+<div class="sourceCode" id="cb189"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb189-1" data-line-number="1">seq2</a></code></pre></div>
+<pre><code>## [1] 0.5728534 0.9082078 0.2016819 0.8983897 0.9446753</code></pre>
+<div class="sourceCode" id="cb191"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb191-1" data-line-number="1">seq3</a></code></pre></div>
+<pre><code>## [1] 0.5728534 0.9082078 0.2016819 0.8983897 0.9446753</code></pre>
+<div class="sourceCode" id="cb193"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb193-1" data-line-number="1"><span class="kw">RNGkind</span>(<span class="dt">normal.kind=</span><span class="st">&quot;default&quot;</span>)</a>
+<a class="sourceLine" id="cb193-2" data-line-number="2"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb193-3" data-line-number="3">seq1 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb193-4" data-line-number="4"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb193-5" data-line-number="5">ignore &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb193-6" data-line-number="6">seq2 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb193-7" data-line-number="7"><span class="kw">set.seed</span>(<span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb193-8" data-line-number="8">ignore &lt;-<span class="st"> </span><span class="kw">rnorm</span>(<span class="dv">2</span>)</a>
+<a class="sourceLine" id="cb193-9" data-line-number="9">seq3 &lt;-<span class="st"> </span><span class="kw">runif</span>(<span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb193-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb193-11" data-line-number="11">seq1</a></code></pre></div>
+<pre><code>## [1] 0.2655087 0.3721239 0.5728534 0.9082078 0.2016819</code></pre>
+<div class="sourceCode" id="cb195"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb195-1" data-line-number="1">seq2</a></code></pre></div>
+<pre><code>## [1] 0.5728534 0.9082078 0.2016819 0.8983897 0.9446753</code></pre>
+<div class="sourceCode" id="cb197"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb197-1" data-line-number="1">seq3</a></code></pre></div>
+<pre><code>## [1] 0.2016819 0.8983897 0.9446753 0.6607978 0.6291140</code></pre>
 
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="quality-control.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="pseudotime.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>

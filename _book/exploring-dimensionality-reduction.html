@@ -4,11 +4,11 @@
 
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <title>Chapter 2 Downloading data | scRNAseq_NMps.utf8</title>
+  <title>Chapter 6 Exploring dimensionality reduction | scRNAseq_NMps.utf8</title>
   <meta name="description" content="" />
   <meta name="generator" content="bookdown 0.19 and GitBook 2.6.7" />
 
-  <meta property="og:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta property="og:title" content="Chapter 6 Exploring dimensionality reduction | scRNAseq_NMps.utf8" />
   <meta property="og:type" content="book" />
   
   
@@ -16,7 +16,7 @@
   
 
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Chapter 2 Downloading data | scRNAseq_NMps.utf8" />
+  <meta name="twitter:title" content="Chapter 6 Exploring dimensionality reduction | scRNAseq_NMps.utf8" />
   
   
   
@@ -29,8 +29,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   
   
-<link rel="prev" href="index.html"/>
-<link rel="next" href="quality-control.html"/>
+<link rel="prev" href="differentially-expressed-genes.html"/>
+<link rel="next" href="exploring-clustering.html"/>
 <script src="libs/jquery-2.2.3/jquery.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
 <link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
@@ -261,27 +261,103 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <div class="page-inner">
 
             <section class="normal" id="section-">
-<div id="downloading-data" class="section level1">
-<h1><span class="header-section-number">Chapter 2</span> Downloading data</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(R.utils)</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="kw">library</span>(tidyverse)</a></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">urls =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%2Ecsv%2Egz&quot;</span>, <span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSM3067194&amp;format=file&amp;file=GSM3067194%5F18hpf%5FclustID%2Etxt%2Egz&quot;</span>,<span class="st">&quot;https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE112294&amp;format=file&amp;file=GSE112294%5FClusterNames%2Ecsv%2Egz&quot;</span>)</a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3">destination =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;./hpf18_count_matrix.csv.gz&quot;</span>, <span class="st">&quot;./hpf18_clustID.txt.gz&quot;</span>, <span class="st">&quot;./hpf18_clustNames.csv.gz&quot;</span> )</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">length</span>(urls)){</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">  <span class="kw">download.file</span>(urls[i], destination[i], <span class="dt">mode =</span> <span class="st">&quot;wb&quot;</span>) </a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">  <span class="kw">gunzip</span>(destination[i])</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">}</a></code></pre></div>
+<div id="exploring-dimensionality-reduction" class="section level1">
+<h1><span class="header-section-number">Chapter 6</span> Exploring dimensionality reduction</h1>
+<div class="sourceCode" id="cb68"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb68-1" data-line-number="1"><span class="kw">library</span>(scater)</a>
+<a class="sourceLine" id="cb68-2" data-line-number="2"><span class="kw">library</span>(scran)</a></code></pre></div>
+<p>This document is adapted from <a href="https://osca.bioconductor.org/dimensionality-reduction.html">Orchestrating Single-Cell Analysis</a>.</p>
+<div id="load-data" class="section level2">
+<h2><span class="header-section-number">6.1</span> Load Data</h2>
+<p>We will use the Zeisel et al. (2015) mouse brain dataset.</p>
+<p>For simplicity we will load the data as a <code>SingleCellExperiment</code> object from a saved <code>.rds</code> file. This data has already had some basic QC, normalisation, and dimensionality reduction applied.</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb69-1" data-line-number="1">sce.zeisel &lt;-<span class="st"> </span><span class="kw">readRDS</span>(<span class="st">&quot;./data/sce.zeisel.rds&quot;</span>)</a></code></pre></div>
+<p>Another application of dimensionality reduction is to compress the data into 2 (sometimes 3) dimensions for plotting. This serves a separate purpose to the PCA-based dimensionality reduction described above. Algorithms are more than happy to operate on 10-50 PCs, but these are still too many dimensions for human comprehension. Further dimensionality reduction strategies are required to pack the most salient features of the data into 2 or 3 dimensions, which we will discuss below.</p>
+</div>
+<div id="pca" class="section level2">
+<h2><span class="header-section-number">6.2</span> PCA</h2>
+<p>We won’t go into the details of PCA here as there are many great <a href="https://setosa.io/ev/principal-component-analysis/">visualisations</a> and <a href="https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html">explanations</a> online. The core idea however is to find the linear subspace which contains most of the variation within the data.</p>
+<p>The plot below shows the data projected onto the first two principal components (PCs), each point represents a cell, the colours correspond to the cell type annotations provided by the Zeisel et al..</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb70-1" data-line-number="1"><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>The simplicity of PCA is both a strength an weakness, because it only finds linear spaces, i.e. variation along straight lines, it can fail to capture important non-linear structure within the data. This is demonstrated in the plot above where different cell-types are not resolved to different coordinates in the first two PCs.</p>
+<p>A nice feature of PCA is that it naturally provides many more than two dimensions, so while the first two might not resolve the data sufficiently we can gain more of an insight by looking at where the data lies in the other PCs.</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb71-1" data-line-number="1"><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">ncomponents=</span><span class="dv">4</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+<div id="t-stochastic-neighbor-embedding" class="section level2">
+<h2><span class="header-section-number">6.3</span> <span class="math inline">\(t\)</span>-stochastic neighbor embedding</h2>
+<p><span class="math inline">\(t\)</span>-SNE (Van der Maaten and Hinton 2008) is a non-linear method for finding a low-dimensional representation of data. It prioritises maintaining local distances between data-points, the distances between distant populations are not particularly informative. This gives the method more freedom in constructing the low-dimensional space and therefore it often produces better results than PCA.</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb72-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb72-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb72-3" data-line-number="3"><span class="co"># runTSNE() stores the t-SNE coordinates in the reducedDims</span></a>
+<a class="sourceLine" id="cb72-4" data-line-number="4"><span class="co"># for re-use across multiple plotReducedDim() calls.</span></a>
+<a class="sourceLine" id="cb72-5" data-line-number="5">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb72-6" data-line-number="6"><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-20-1.png" width="672" />
+<span class="math inline">\(t\)</span>-SNE is quite computationally intensive and so it is ordinarily run on the first 50-100 PCA components of the data rather than the raw expression values, this also takes advantage of the denoising that PCA provides.</p>
+<p>Unlike PCA it is a stochastic method and so, unless a random seed is specified each time, sequential runs of the algorithm will produce different results.</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb73-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb73-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb73-3" data-line-number="3">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb73-4" data-line-number="4">tsne.plot<span class="fl">.1</span> &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb73-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb73-6" data-line-number="6">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb73-7" data-line-number="7">tsne.plot<span class="fl">.2</span> &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb73-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb73-9" data-line-number="9">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb73-10" data-line-number="10">tsne.plot<span class="fl">.3</span> &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb73-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb73-12" data-line-number="12">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb73-13" data-line-number="13">tsne.plot<span class="fl">.4</span> &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb73-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb73-15" data-line-number="15"><span class="kw">multiplot</span>(tsne.plot<span class="fl">.1</span>,tsne.plot<span class="fl">.2</span>,tsne.plot<span class="fl">.3</span>,tsne.plot<span class="fl">.4</span>,</a>
+<a class="sourceLine" id="cb73-16" data-line-number="16">          <span class="dt">layout=</span><span class="kw">matrix</span>(<span class="kw">seq</span>(<span class="dv">4</span>),<span class="dt">nrow=</span><span class="dv">2</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>))</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-21-1.png" width="672" />
+Some of these results might be more appealing than others, however it is important to try and avoid ‘cherrypicking’ the plots that conform best to our preconceptions.</p>
+<p>Furthermore <span class="math inline">\(t\)</span>-SNE also has a number of parameters which can significantly effect the output, they are discussed in depth <a href="https://distill.pub/2016/misread-tsne/">here</a>.</p>
+<p>The effect of changing one of these parameters, the <code>perplexity</code> is shown below:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb74-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb74-2" data-line-number="2">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>, <span class="dt">perplexity=</span><span class="dv">5</span>)</a>
+<a class="sourceLine" id="cb74-3" data-line-number="3">out5 &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb74-4" data-line-number="4"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;perplexity = 5&quot;</span>)</a>
+<a class="sourceLine" id="cb74-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb74-6" data-line-number="6"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb74-7" data-line-number="7">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>, <span class="dt">perplexity=</span><span class="dv">20</span>)</a>
+<a class="sourceLine" id="cb74-8" data-line-number="8">out20 &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>,<span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb74-9" data-line-number="9"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;perplexity = 20&quot;</span>)</a>
+<a class="sourceLine" id="cb74-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb74-11" data-line-number="11"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb74-12" data-line-number="12">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runTSNE</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>, <span class="dt">perplexity=</span><span class="dv">80</span>)</a>
+<a class="sourceLine" id="cb74-13" data-line-number="13">out80 &lt;-<span class="st"> </span><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;TSNE&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>, <span class="dt">add_legend=</span><span class="ot">FALSE</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb74-14" data-line-number="14"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;perplexity = 80&quot;</span>)</a>
+<a class="sourceLine" id="cb74-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb74-16" data-line-number="16"><span class="kw">multiplot</span>(out5, out20, out80, <span class="dt">cols=</span><span class="dv">3</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+</div>
+<div id="umap" class="section level2">
+<h2><span class="header-section-number">6.4</span> UMAP</h2>
+<p>The uniform manifold approximation and projection (UMAP) method (McInnes, Healy, and Melville 2018) is another non-linear dimensionality reduction technique that is becoming increasingly popular. The underlying theory is different to that of <span class="math inline">\(t\)</span>-SNE and the results are different as demonstrated in the plot below.</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb75-1" data-line-number="1"><span class="kw">set.seed</span>(<span class="dv">100</span>)</a>
+<a class="sourceLine" id="cb75-2" data-line-number="2">sce.zeisel &lt;-<span class="st"> </span><span class="kw">runUMAP</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;PCA&quot;</span>)</a>
+<a class="sourceLine" id="cb75-3" data-line-number="3"><span class="kw">plotReducedDim</span>(sce.zeisel, <span class="dt">dimred=</span><span class="st">&quot;UMAP&quot;</span>, <span class="dt">colour_by=</span><span class="st">&quot;level1class&quot;</span>)</a></code></pre></div>
+<p><img src="scRNAseq_NMps_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p>UMAP tends to produce more compact visualisations than <span class="math inline">\(t\)</span>-SNE, preserving more of the global structure. Furthermore it is much faster which can be important for large datasets, a primary reason for its increasing popularity. Like <span class="math inline">\(t\)</span>-SNE it involves random numbers and so setting a seed is important for reproducibility.</p>
+</div>
+<div id="bibliography" class="section level2">
+<h2><span class="header-section-number">6.5</span> Bibliography</h2>
+<p>McInnes, Leland, John Healy, and James Melville. 2018. “UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction.” arXiv E-Prints, February, arXiv:1802.03426.</p>
+<p>Van der Maaten, L., and G. Hinton. 2008. “Visualizing Data Using T-SNE.” J. Mach. Learn. Res. 9 (2579-2605): 85.</p>
+<p>Zeisel, A., A. B. Munoz-Manchado, S. Codeluppi, P. Lonnerberg, G. La Manno, A. Jureus, S. Marques, et al. 2015. “Brain structure. Cell types in the mouse cortex and hippocampus revealed by single-cell RNA-seq.” Science 347 (6226): 1138–42.</p>
 
+</div>
 </div>
             </section>
 
           </div>
         </div>
       </div>
-<a href="index.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
-<a href="quality-control.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+<a href="differentially-expressed-genes.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="exploring-clustering.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
     </div>
   </div>
 <script src="libs/gitbook-2.6.7/js/app.min.js"></script>
