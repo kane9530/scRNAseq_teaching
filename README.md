@@ -1,5 +1,4 @@
 # scRNAseq_teaching
-- Launch in Rstudio: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/kane9530/scRNAseq_teaching/master?urlpath=rstudio)
 
 ## Introduction
 

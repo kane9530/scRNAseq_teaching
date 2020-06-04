@@ -6,3 +6,4 @@ NMps_book/*.txt
 
 # Ignore rds files from rds folder
 NMps_book/rds
+.Rproj.user
