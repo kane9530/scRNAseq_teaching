@@ -1,8 +1,8 @@
 # Ignore csv files
-zebrafishNMps/*.csv
+NMps_book/*.csv
 
 # Ignore text files
-zebrafishNMps/*.txt
+NMps_book/*.txt
 
-# Ignore rds files
-zebrafishNMps/*.rds
+# Ignore rds files from rds folder
+NMps_book/rds
