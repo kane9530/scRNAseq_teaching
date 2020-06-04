@@ -19,14 +19,14 @@ Additioanlly we will be taking a closer look at some key techniques, highlightin
 
 We hope that this will provide a good starting point for getting to grips with this fast-moving field, and encourage you to contact us for further disucssion or advice if needed.
 
-#### Links
+### Links
 [Reference paper](https://science.sciencemag.org/content/360/6392/981.full)
 
 [Dataset repository](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067194)
 
 ## Created by:
-- Giles Harper-Donnelly 
 - Kane Toh
+- Giles Harper-Donnelly 
 
 
 
