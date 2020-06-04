@@ -1,0 +1,38 @@
+"0","```r
+TBcells <- FindVariableFeatures(TBcells)
+```"
+"1","Calculating gene variances
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+Calculating feature variances of standardized and clipped values
+0%   10   20   30   40   50   60   70   80   90   100%
+[----|----|----|----|----|----|----|----|----|----|
+**************************************************|
+"
+"0","```r
+sce_sling <- sce_sling[VariableFeatures(TBcells),]
+counts <- assays(sce_sling)$counts %>% as.matrix
+logcounts <- assays(sce_sling)$logcounts %>% as.matrix()
+sce_sling
+```"
+"1","class: SingleCellExperiment 
+dim: 2000 551 
+metadata(0):
+assays(2): counts logcounts
+rownames(2000): apoc1l actc1a ... LOC101882772 LOC101883323
+rowData names(6): sct.detection_rate sct.gmean ...
+  sct.residual_variance sct.variable
+colnames(551): 18hpf_DEW038_GAATGGAAAT_CGACGTCA
+  18hpf_DEW038_ATGCTCCGT_AGCGCGAT ... 18hpf_DEW003_AACCCATAT_TCACCGAG
+  18hpf_DEW003_GATACAAACT_TTCGTTCC
+colData names(26): orig.ident nCount_RNA ... slingPseudotime_1
+  slingPseudotime_2
+reducedDimNames(3): PCA TSNE UMAP
+altExpNames(0):
+"
+"0","```r
+dim(counts)
+```"
+"1","[1] 2000  551
+"

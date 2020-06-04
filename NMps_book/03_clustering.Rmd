@@ -1,0 +1,247 @@
+# Clustering
+
+## Introduction
+
+In part 1), we performed quality control on the cells in our dataset. At this stage, we have discarded `8` cells which have a low number of expressed features and removed `381` features which were not expressed in any cell in the dataset. At the end of our analyses, we saved the following at our workplace:
+
+1. QCed `SingleCellExperiment` R object (with the `.rds` file extension)
+2. Metadata regarding the cells (clusterID, clusternames etc.) in a csv file
+
+In this section, we will demonstrate the `normalisation`, `feature selection`, `dimensionality reduction` and `clustering` steps of the scRNAseq workflow. To do this, we will take advantage of the [Seurat](https://satijalab.org/seurat/) R package which provides numerous convenient wrapper functions that simplify most of the tasks above to just a single(!) function call. 
+
+*Q1) Which steps of the workflow are we executing in this notebook?*
+
+## Importing libraries
+```{r, message = FALSE }
+library(SingleCellExperiment)
+library(Seurat)
+library(tidyverse)
+library(gridExtra)
+library(viridis)
+library(extrafont) 
+loadfonts(quiet = TRUE)
+
+```
+
+```{r, include = FALSE}
+mytheme <-  theme(legend.title = element_text(size = 12, face = "bold"),
+      legend.text=element_text( size = 10), 
+      text=element_text(family="Arial")) 
+```
+
+## Importing Data
+```{r Importing rds and coldata, message = FALSE}
+# Import raw dataset and metadata into seurat.
+
+hpf18 <- readRDS(file = "rds/hpf18_QCed_new.rds" ) # Preprocessed dataset Arifrom 1)
+
+colData <- read_csv("./hpf18_coldata.csv") %>% column_to_rownames(var = 'cells')
+
+```
+
+SCTransform wrapper in seurat implements the following 3 functions sequentially:
+
+1. NormalizeData:
+
+- In a previous implementation, Seurat normalises the gene measurements for each cell by the total expression in the cell, multiples this by a scale factor (10,000 by default), and then log-transforms the result. More details about the current updated normalisation approach taken by Seurat can be found in the original paper [Regularised negative binomial regression](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1874-1)
+
+- Seurat's mode of normalisation is different from the normalisation method implemented in another popular package (scran)
+
+2. FindVariableFeatures:
+- Identifies the top 3000 features (genes) that show the greatest cell-to-cell variation in the dataset. These genes are used as they serve to highlight the signal in the dataset. 
+
+3. ScaleData:
+- Standardises the expression levels of each gene such that:
+  - Mean expression of the gene across all cells is 0 
+  - Variance of the gene across all cells is 1 so that highly expressed genes do not dominate downstream analysis.
+  
+*Q2) Can you list alternative methods of normalising the data?*
+
+*Q3) Why do we focus on the top few variable features?*
+
+*Q4) What is the purpose of scaling the data?*
+
+```{r SCTransform of converted seurat object}
+hpf18_seurat <- CreateSeuratObject(counts= counts(hpf18), meta.data = colData)
+
+hpf18_seurat <- SCTransform(hpf18_seurat, vars.to.regress = c("nCount_RNA", "libraryName"), verbose = FALSE) #Takes about 2 min 30 seconds
+
+```
+
+## Useful seurat object interaction methods
+
+- hpf18_seurat[["RNA"]] # Accessing RNA assay with [[]] notation
+- hpf18_seurat\@assays$RNA # Alternative method of accessing assay
+- Key(object = hpf18_seurat) # List the available assays
+- slotNames(hpf18_seurat) 
+- DefaultAssay(hpf18_seurat) # Current assay
+- head(Idents(hpf18_seurat)) # All identities 
+- GetAssayData(object = hpf18_seurat) 
+- Embeddings(object = hpf18_seurat, reduction = "pca") #Coordinates of cells in low-dimensional space
+- Loadings(object = hpf18_seurat, reduction = "pca")  # Assessing loadings for PCA
+- FetchData(object = hpf18_seurat, vars = c("PC_1")) # Retrieves data for a set of cells
+
+[Complete list of interactions methods](https://satijalab.org/seurat/essential_commands.html)
+
+## Performing dimensional reduction
+
+*Q5) What does PCA stand for and how does it work?*
+
+*Q6) What does t-SNE stand for and how does it work?*
+
+*Q7) What does UMAP stand for and what is the branch of mathematics that underpins it?*
+
+```{r Dim Reductions with PCA, tSNE, UMAP } 
+hpf18_seurat <- RunPCA(hpf18_seurat, pcs.compute = 25, verbose = FALSE)
+
+hpf18_seurat <- RunTSNE(hpf18_seurat, dims.use = 1:25, reduction.use = "pca", perplexity = 76)
+
+hpf18_seurat <- RunUMAP(hpf18_seurat, dims = 1:25,  min.dist = 0.7, n.neighbors = 30L, verbose = FALSE)
+
+```
+
+## Clustering 
+
+The theory underpinning the two seemingly innocuous functions below is dense. We just need to know enough about the important arguments to work with them. If you want more information, the links below provide a comprehensive overview of the key ideas. I will share what I believe is the bare minimum to start working with these functions intelligently.
+
+### Constructing a Shared-nearest neighbour (SNN) graph
+
+Seurat employs a `graph-based clustering` method. Of course, this is not the only clustering method available- popular alternatives being hierarchical clustering or simple k-means clustering.
+
+#### Theory
+
+To perform graph-based clustering, as the name suggests, we need to construct a graph with our data, where the nodes/vertices in the graph represent our cells and the edge weights between the nodes represent the similarity between the cells involved. How is `similarity` defined in this context? 
+
+One possible way to define the similarity between two cells is to calculate their `Euclidean distance`, that is, by obtaining the square root of the sum of squared differences of each feature value. Remember that each cell is represented as a vector, where each entry is the normalised expression value for a gene. Therefore, we are simply calculating the euclidean distance between two vectors.
+
+Another notion of similarity is based on the number of `shared neighbours` between two cells. This involves two steps: first, we need to determine the number of neighbors (let this number be $k$) that each cell can have, and obtain this list of `k-nearest neighbors`. Second, we draw an edge between two cells if they have a neighbor in common (the intersection of the neighborhoods) and weight the edge by how near each of the shared neighbor is to both nodes. Intuitively, if two nodes A and B share a neighbor C that is very close to both of them (C has a high rank in both nodes), then A and B are very similar to each other and this should be reflected in a high edge weight.
+
+The latter notion of similarity, based on shared nearest neighbors, is employed in Seurat. Specficially, Seurat uses `Jaccard-based weights`, in which similarity is defined as the intersection of the neighbors of both cells (shared neighbours) over the union of the neighbors. 
+
+#### Practical comments
+
+Just as in the k-nearest neighbors algorithm, the number of neighbors, $k$ , considered for each cell is arguably the most important parameter to tinker with. This affects the clustering resolution. A smaller $k$ leads to a finer resolution, with fewer neighbors per cell. 
+
+### Clustering with the Louvain algorithm 
+
+Seurat allows us to use a variety of graph-based clustering methods, with the default being the Louvain algorithm. 
+
+#### Theory
+
+I cannot put it more succinctly than Shanker Iyer in his quora post cited in the resources section below:
+
+>Communities are groups of nodes within a network that are more densely connected to one another than to other nodes. Modularity is a metric that quantifies the quality of an assignment of nodes to communities by evaluating how much more densely connected the nodes within a community are compared to how connected they would be, on average, in a suitably defined random network. The Louvain method of community detection is an algorithm for detecting communities in networks that relies upon a heuristic for maximizing the modularity. The method consists of repeated application of two steps. The first step is a "greedy" assignment of nodes to communities, favoring local optimizations of modularity. The second step is the definition of a new coarse-grained network in terms of the communities found in the first step. These two steps are repeated until no further modularity-increasing reassignments of communities are possible.
+
+#### Practical comments
+
+The resolution parameter is an important parameter to optimize. The smaller the value, the more coarse-grained our clustering, and the fewer clusters are returned. 
+
+### Resources 
+
+- This powerpoint presentation by Xu and Su summarises their 2015 paper on the shared nearest neighbor algorithm  [powerpoint](https://www.csb.pitt.edu/Faculty/lezon/teaching/journal_club/slides/srashid_slides-151012.pdf) [Reference](https://academic.oup.com/bioinformatics/article/31/12/1974/214505)
+
+- The best description I have seen about the louvain algorithm is found in this [quora](https://www.quora.com/Is-there-a-simple-explanation-of-the-Louvain-Method-of-community-detection?share=1) page. The extended description is a real gem.
+
+- For a more general understanding of clustering in the context of scRNA-seq data, check out our favorite scRNA-seq guide for more details. [osca](https://osca.bioconductor.org/clustering.html#clustering-graph)
+
+*Q8) What are the alternative clustering methods available in seurat? How would you implement them?*
+
+```{r Clustering}
+hpf18_seurat <- Seurat::FindNeighbors(hpf18_seurat,  dims = 1:12, k.param = 20, reduction = "pca", verbose = FALSE)
+hpf18_seurat <- Seurat::FindClusters(hpf18_seurat, algorithm = 1, resolution = 0.8, verbose = FALSE)
+
+```
+
+## UMAP with authors' annotations
+```{r UMAP with authors clustering, fig.cap = "Figure 1- UMAP visualisation of the dataset with the authors labels. The labels appear scattered in the UMAP representation."}
+
+Idents(hpf18_seurat) <- "clusterID"
+DimPlot(hpf18_seurat, reduction = "umap", label= FALSE) 
+```
+## t-SNE with authors' annotations
+```{r TSNE with authors clustering, fig.cap = "Figure 2- t-SNE visualisation of the dataset with the authors labels. Each cluster appears to be more homogeneous in the cell labels than the UMAP visualisation, which is consistent with the t-SNE clustering that was performed in the original study."}
+DimPlot(hpf18_seurat, reduction = "tsne", label= FALSE) 
+```
+
+## Assigning our own cluster identities
+
+To match our clustering results with the authors' cluster annotations, we label each cluster with the cluster name held by the majority of the cells in the cluster (this is what we are doing with the `top_n` function). We then manually edit the labels for some of the neural clusters that share the same cluster label.
+
+*Q9) What does the tidyr::complete function do below?*
+
+```{r Assigning cluster identities}
+Idents(hpf18_seurat) <- "seurat_clusters"
+
+clusterIDlabels <- hpf18_seurat@meta.data %>% 
+  dplyr::select(clusterNames, seurat_clusters)%>%
+  na.omit()  %>%
+  group_by(clusterNames, seurat_clusters) %>%
+  summarize(Cell_Numbers=n())%>%
+  tidyr::complete(seurat_clusters)%>%
+  replace_na(list(Cell_Numbers = 0))%>%
+  group_by(seurat_clusters)%>%
+  top_n(n=1, wt=Cell_Numbers) %>%
+  arrange(seurat_clusters) %>%
+  dplyr::select(seurat_clusters, clusterNames)
+
+clusterIDlabels$clusterNames[1:3] <- c("18hpf-neural - mid-hindbrain", "18hpf-neural - fore-midbrain", "18hpf-neural - midbrain ")
+
+hpf18_seurat@meta.data$seurat_clusters_names <- clusterIDlabels$clusterNames[match(hpf18_seurat@meta.data$seurat_clusters, clusterIDlabels$seurat_clusters)]
+
+labelList <- paste(hpf18_seurat@meta.data$seurat_clusters, hpf18_seurat@meta.data$seurat_clusters_name, sep =": ")
+labelList <- gtools::mixedsort(unique(sort(labelList)))
+```
+## UMAP visualisation of our annotations
+```{r Dim Red Visualisation of my clustering, fig.cap = "Figure 3- UMAP visualisation of the dataset with updated labels."}
+cols <- c(scales::hue_pal()(18), "#FFFFFF") # the number of colors should match the number of clusters
+
+DimPlot(hpf18_seurat, label = TRUE, label.size = 4, pt.size=0.1, reduction = "umap") + 
+  scale_color_manual(values = cols, name = "Cluster Identities", labels = labelList)+ mytheme
+
+```
+## Highlighting tailbud cells
+```{r Highlighting tailbud cells, fig.cap= "Figure 4- UMAP visualisation of the dataset with the tailbud cells highlighted."}
+# Selecting cells to highlight
+cells_PSM <- colnames(hpf18_seurat[,hpf18_seurat@meta.data$seurat_clusters_names == "18hpf-tailbud - PSM"])
+cells_TB <-  colnames(hpf18_seurat[,hpf18_seurat@meta.data$seurat_clusters_names == "18hpf-tailbud - spinal cord"])
+cells_highlighted_TB <- list(cells_PSM, cells_TB)
+highlighted_names_TB = list("Unselected",
+                            "18hpf-tailbud - spinal cord",
+                        "18hpf-tailbud - PSM" )
+
+cols_highlight = c("grey", "#00BB49","#8CAB00")
+
+DimPlot(hpf18_seurat, label = FALSE, label.size = 6, pt.size =0.05,  cells.highlight = cells_highlighted_TB)+
+  scale_color_manual(values = cols_highlight, name = "Cluster Identities", labels = highlighted_names_TB )+ mytheme
+
+```
+## Saving RDS object
+```{r}
+
+saveRDS(hpf18_seurat, file = "./rds/hpf18_seurat_dimred_new.rds" )
+
+```
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
+
+
+## Solutions
+
+1. Normalising data, feature selection, dimensionality reduction, clustering. (We don't have multiple datasets to integrate here) 
+2. Examples of normalisation strategies include: See [osca](https://osca.bioconductor.org/normalization.html)
+- Library size normalisation (dividing by total counts across all genes for each cell)
+- Normalisation by spike-ins: using the fact that all cells should have the same number of spike-ins and that the spike-in transcripts respond to biases similarly to the endogeneous genes, we can scale each cell by the spike-in counts
+3. We assume that biological variation would result in significant variation in the genes of interest.
+4. Genes are expressed at different levels. If we do not scale our data, then in subsequent calculations of distance, genes with higher levels of expression will dominate in the analyses.
+5. Principal component analysis. PCA is an unsupervised learning technique (similar to t-SNE, UMAP) which is used to reduce the dimension of the dataset with minimum loss of information. It does this by explaining the current predictors with a smaller set of variables called principal components, which are obtained from the original via a simple linear transformation.
+6. t-distributed stochastic neighbor embedding. t-SNE is a non-linear (as opposed to PCA) dimensionality reduction method which focuses on preserving the local structure of the data. This means that points that are close to each other on high-dimensional space will also be close to each other on the lower-dimensional projection. It does not, however, preserve global structure. An important parameter to understand is the perplexity parameter, which is the expected density around each point. For more details, watch this amazing youtube video [StatQuest](https://www.youtube.com/watch?v=NEaUSP4YerM)
+7. Uniform Manifold Approximation and Projection. The branch of mathematics is topology.
+8. Leiden algorithm and SLM algorithm. Adjust the algorithm argument in the `FindClusters` function. 
+9. It completes the dataset by finding all missing combinations of data.

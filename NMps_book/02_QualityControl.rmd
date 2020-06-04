@@ -1,0 +1,173 @@
+# Quality Control
+
+## Overview 
+In this section, we will construct the SingleCellExperiment object, and then perform quality control on the dataset. The workflow below, taken from chapter 5 of this text [Orchestrating Single-Cell Analysis](https://osca.bioconductor.org/overview.html#introduction-1), neatly summarises the entire scRNA-seq workflow. 
+
+*Q1) Which steps of the workflow are we executing in this notebook?*
+
+```{r, fig.cap = "Figure 1: Schematic of a typical scRNA-seq analysis workflow. Each stage (separated by dashed lines) consists of a number of specific steps, many of which operate on and modify a SingleCellExperiment instance.", echo=FALSE}
+knitr::include_graphics("1_workflow.png")
+
+```
+## Importing libraries
+```{r, message = FALSE}
+###  Clearing workspace and loading the required packages
+library(scater) #For quality control
+library(SingleCellExperiment) # Data structure to house out data
+library(tidyverse) 
+library(org.Dr.eg.db) #Zebrafish annotation database
+```
+
+## Importing the data
+
+*Q2) What does the %>% symbol do?*
+
+```{r Importing dataset, message = FALSE} 
+
+# Importing count matrix, cluster IDs and cluster names.
+count_file <- "./hpf18_count_matrix.csv" 
+clustid_file <- "./hpf18_clustID.txt"
+clust_names_file <- "./hpf18_clustNames.csv"
+
+count_matrix <- read_csv(count_file) %>% column_to_rownames(var = 'Row')
+clustid <- read_table(clustid_file, col_names = FALSE)
+clust_names <- read_csv(clust_names_file, col_types = cols(
+  "TimePoint(hpf)"= col_double(), 
+ "ClusterID" = col_double(), 
+  "ClusterName" = col_character()))
+```
+
+## Preparing the column metadata
+In the next code chunk, we will prepare the column metadata which contains information about each cell in the dataset. We will want to append the zebrafish stage as a prefix to the cell names, in case we want to keep track of cells from different developmental stages in our downstream analyses. We will also extract the library names from the cell names using a simple `regular expression` that succinctly represents our search target. Lastly, we will combine the updated cell names, library names, cluster IDs and cluster names into a single dataframe, and rename the columns accordingly. To do this, we use the `reduce` function, which iteratively applies the function `cbind` (short for column bind) to a list containing our columns of interest.  We also used the `left_join` function from the `dplyr` package. [Join functions](https://statisticsglobe.com/r-dplyr-join-inner-left-right-full-semi-anti#left_join) 
+
+*Q3) What does the [0-9]\* syntax within the regular expression represent?*
+
+*Q4) Must we use left_join to achieve our goal here?* 
+
+```{r Preparing column metadata}
+
+# Preparing column data file
+hpf18_clusternames <- dplyr::filter(clust_names, `TimePoint(hpf)` == 18)
+
+# Appending 18hpf to cell names 
+colnames(count_matrix) <- paste0("18hpf_", colnames(count_matrix))
+cellnames <- colnames(count_matrix)
+
+# Extracting library names from cell names
+pattern="DEW[0-9]*"
+libnames <- regmatches(cellnames,regexec(pattern,cellnames)) %>% unlist()
+
+# Merging all 3 dataframes and renaming columns
+
+name_cluster_lib <- Reduce(cbind, list(cellnames, clustid, libnames))
+colDataMatrix <- dplyr::left_join(name_cluster_lib, hpf18_clusternames, by = c("X1" = "ClusterID")) %>% 
+                dplyr::rename(cells = init, 
+                clusterID = X1,
+                libraryName = `x[[i]]`,
+                timepoint = `TimePoint(hpf)`,
+                clusterNames = ClusterName)
+```
+
+```{r}
+dim(colDataMatrix)
+
+```
+
+## Preparing the row metadata
+
+We use the `AnnotationDbi` package below to obtain the ensembl gene identifiers for our gene symbols. [Converting Gene names](https://www.r-bloggers.com/converting-gene-names-in-r-with-annotationdbi/). For more information about annotation packages, see [Annotations](https://www.bioconductor.org/help/course-materials/2014/SeattleOct2014/B02.4_Annotation.html)
+
+```{r Preparing row metadata}
+# Preparing row data file
+#keytypes(org.Dr.eg.db)
+ensembl <- AnnotationDbi::mapIds(org.Dr.eg.db, keys=rownames(count_matrix), keytype = "SYMBOL",column = "ENSEMBL")
+tail(ensembl)
+```
+
+## Constructing the single cell experiment object
+At this stage, we have the following prepared:
+
+1. The raw count matrix of the 18hpf zebrafish dataset
+2. The column metadata which describes information regarding each cell such as its Dropseq library name, clusterID assigned by the authors and the associated cluster name 
+3. The row metadata which contains the ensembl gene names.
+
+We will parse all 3 datasets as arguments into the `SingleCellExperiment()` constructor.
+
+```{r SCE object creation, echo=TRUE}
+# Creating SCE object and obtaining Ensembl IDs
+
+hpf18 <- SingleCellExperiment(assays = list(counts = as.matrix(count_matrix)), colData = colDataMatrix)
+
+rowData(hpf18)$ensembl <- ensembl
+
+```
+
+## Quality control with scater
+Using the scater package, we obtain useful QC metrics for the dataset and discard cells with abnormally low total number of RNA or expressed features.
+
+*Q5) How does the `quickPerCellQC` function determine which cells are outliers? What is the median absolute deviation?* 
+
+```{r, fig.cap="Figure 2: Quality control plots from the 18hpf zebrafish data, with the total RNA count and detected features as the quality metrics. Each point is a cell and colored according to whether it is identified as an outlier within each batch (library names) or not."}
+
+stats <- perCellQCMetrics(hpf18, exprs_values = "counts", percent_top = c(50, 100, 200, 500),
+detection_limit = 0)
+
+qc <- quickPerCellQC(stats, batch = hpf18$libraryName)
+colData(hpf18) <- cbind(colData(hpf18), stats)
+
+hpf18$discard <- qc$discard
+gridExtra::grid.arrange(
+    plotColData(hpf18, x = "libraryName", y="sum", colour_by="discard") +
+        scale_y_log10() + ggtitle("Total count"),
+    plotColData(hpf18, x = "libraryName", y="detected", colour_by="discard") +
+        scale_y_log10() + ggtitle("Detected features")
+)
+
+```
+Notice that there are only a few cells that are discarded. This is because the authors have already performed a first pass in the quality control.
+
+```{r Number of cells discarded}
+colSums(as.matrix(qc))
+```
+Apart from removing the outlier cells and thus reducing the dimensions of the column space, we can also reduce the number of features. We take a conservative approach here: we retain all genes that are expressed in at least 1 cell in the dataset. 
+
+```{r Subsetting genes }
+# Retaining genes that are expressed in at least 1 cell in the dataset
+ave_counts <- rowSums(assay(hpf18, "counts")) / dim(hpf18)[2]
+to_keep <- ave_counts > 0
+sum(!to_keep)
+```
+We subset our dataset with the 2 boolean conditions established above and save our results.
+
+```{r Subsetted data}
+hpf18<- hpf18[to_keep, !qc$discard]
+hpf18
+
+```
+
+## Saving the RDS object
+
+```{r}
+
+saveRDS(hpf18, file = "./rds/hpf18_QCed_new.rds" )
+write_csv(as_tibble(colData(hpf18)), path = "./hpf18_coldata.csv")
+```
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
+
+
+## Solutions
+
+1. Construction of SCE and quality control
+2. %>% is the pipe operator from the dplyr package. It is very useful when the output of one function acts as an input for another, thus facilitating the chaining of our functions. It saves us from assigning new variables each time.
+3. [0-9] means any digit from 0-9 and * means that the preceding expression is repeated for any number of times.
+4. Depends. We want to make sure that all the clusterIDs in our dataset are mapped to a corresponding clustername, hence we use left_join. If there is an unmatched clusterID, it will return an NA. In this case, we know that all the clusterIDs in our dataset are present in the txt file, so any join method will work.
+5. A cell is an outlier with respect to a metric if it is greater than 3 median absolute deviations [MAD](https://en.wikipedia.org/wiki/Median_absolute_deviation) 
+

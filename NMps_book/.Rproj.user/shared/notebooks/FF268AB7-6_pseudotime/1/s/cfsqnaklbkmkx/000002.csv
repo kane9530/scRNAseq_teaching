@@ -1,0 +1,40 @@
+"0","```r
+clustPat <- readRDS(file = \"rds/allGenesCluster.rds\")
+
+clusterLabels <- primaryCluster(clustPat$rsec)
+clustPat
+genesWithinClust <- rownames(clustPat$yhatScaled[clusterLabels == 2, ])
+(genesWithinClust)[5]
+
+cUniq <- unique(clusterLabels)
+cUniq <- cUniq[!cUniq == -1] # remove unclustered genes
+cUniq <- sort(cUniq)
+
+plots <- list()
+for (xx in cUniq[1:10]) {
+  cId <- which(clusterLabels == xx)
+  p <- ggplot(data = data.frame(x = 1:nPointsClus,
+                                y = rep(range(clustPat$yhatScaled[cId, ]),
+                                        nPointsClus / 2)),
+              aes(x = x, y = y)) +
+    geom_point(alpha = 0) +
+    labs(title = paste0(\"Cluster \", xx),  x = \"Pseudotime\", y = \"Normalized expression\") +
+    theme_classic()
+  for (ii in 1:length(cId)) {
+    geneId <- rownames(clustPat$yhatScaled)[cId[ii]]
+    p <- p +
+      geom_line(data = data.frame(x = rep(1:nPointsClus, 2),
+                                  y = clustPat$yhatScaled[geneId, ],
+                                  lineage = rep(0:1, each = nPointsClus)),
+                aes(col = as.character(lineage), group = lineage), lwd = 1.5)
+  }
+  p <- p + guides(color = FALSE) +
+    scale_color_manual(values = c(\"orange\", \"darkseagreen3\"),
+                       breaks = c(\"0\", \"1\"))  
+  plots[[as.character(xx)]] <- p
+}
+plots$ncol <- 3
+
+do.call(cowplot::plot_grid, plots)
+
+```"

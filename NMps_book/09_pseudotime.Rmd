@@ -1,0 +1,173 @@
+# Pseudotime
+
+Our aim is to explore how the expression of marker genes change along the neural and mesodermal trajectories, with the neuromesodermal progenitors acting as the root of the bifurcation.  
+
+We will perform `pseudotime inference` with the slingshot package to assign each cell a measure of biological progress along each trajectory. More precisely, for two cells A and B ordered along a trajectory, if cell B has a larger pseudotime value than cell A, then cell B is interpreted as exhibiting a gene expression profile of a more differentiated cell relative to cell A.
+
+Subsequently, we use the `tradeseq` package to analyse the change in gene expression along the neural and mesodermal lineage trajectories. 
+
+## Importing libraries
+```{r, message = FALSE}
+library(SingleCellExperiment)
+library(slingshot)
+library(RColorBrewer)
+library(tidyverse)
+library(Seurat)
+library(tradeSeq)
+library(clusterExperiment)
+library(cowplot)
+
+```
+## Importing data
+```{r, message = FALSE}
+TBcells <- readRDS("rds/TBcells_subclustered.rds")
+```
+
+```{r preprocessing}
+
+#Convert to SCE object
+TB_sce <- as.SingleCellExperiment(x = TBcells,
+                                  assay = "SCT")
+
+table(colData(TB_sce)$subclusters_names)
+
+```
+
+*Q1 How would you subset the data to contain only cells in the NMp, maturation zone, posterior PSM and pou5f3+ posterior NT clusters?*
+
+
+To run slingshot on our dataset, we need to provide it with the coordinates of the reduced dimension and the cluster labels. For comparison with our previous work, we will use the `UMAP` coordinates and the `subcluster_names` labels, which are both stored in the converted `SingleCellExperiment` object.
+
+The `slingshot` wrapper function performs 2 necessary steps in this method of  lineage inference. First, it constructs a cluster-based minimum spanning tree (MST) on the cells to obtain a global lineage structure using the `getLineages` function. This is followed by the fitting of principle curves for each lineage called with the `getCurves` function.
+
+```{r slingshot}
+sce_sling <- slingshot(TB_sce, clusterLabels = "subclusters_names", reducedDim = "UMAP", start.clus = "NMps" )
+```
+
+```{r plot_slingshot, fig.width = 11, fig.height = 6}
+
+clusters <- ifelse(colData(TB_sce)$subclusters_names == "NMps", 1, 
+                    ifelse(colData(TB_sce)$subclusters_names == "Maturation zone",2,                  ifelse(colData(TB_sce)$subclusters_names == "Posterior PSM", 3,
+                    ifelse(colData(TB_sce)$subclusters_names == "Pou5f3+ Posterior NT", 4,ifelse(colData(TB_sce)$subclusters_names == "Posterior NT", 5,ifelse(colData(TB_sce)$subclusters_names == "Nascent somites", 6,ifelse(colData(TB_sce)$subclusters_names == "Tail somites", 7, NA)))))))
+
+clust_col = data.frame(names = colData(TB_sce)$subclusters_names, clusters = clusters, colors = brewer.pal(9,"Set1")[clusters]) %>% arrange(clusters) %>% distinct()
+
+plot(reducedDims(sce_sling)$UMAP, col = brewer.pal(9,"Set1")[clusters], pch=16, asp = 1)
+
+lines(SlingshotDataSet(sce_sling), lwd=1, type = "lineages", col='black')
+
+legend(-11, -0.7, legend=c("NMps", "Maturation Zone", "Posterior PSM", "Pou5f3+ posterior NT", "Posterior NT", "Nascent Somites", "Tail Somites"), col=clust_col$colors, pch = 16, pt.cex = 0.8, cex = 0.8, bty='n', box.lty=0)
+
+
+
+```
+
+```{r varfeatures}
+TBcells <- FindVariableFeatures(TBcells)
+sce_sling <- sce_sling[VariableFeatures(TBcells),]
+counts <- assays(sce_sling)$counts %>% as.matrix
+logcounts <- assays(sce_sling)$logcounts %>% as.matrix()
+
+```
+## TradeSeq workflow analyses
+
+[Tradeseq vignette](https://statomics.github.io/tradeSeq/articles/tradeSeq.html)
+
+```{r evaluateK, message = FALSE} 
+set.seed(5)
+icMat <- evaluateK(counts = counts, sds = SlingshotDataSet(sce_sling), k = 3:10,
+                   nGenes = 200, verbose = T)
+```
+
+```{r fitGAM, message = FALSE}
+dim(counts)
+dim((sce_sling))
+
+sce <- fitGAM(counts = counts,
+                  sds = SlingshotDataSet(sce_sling),
+              nknots = 10)
+```
+
+```{r saveRDS}
+saveRDS(sce, file = "rds/6_slingshot.rds")
+
+```
+
+```{r asso_gene test}
+sce <- readRDS("rds/6_slingshot.rds")
+assoRes <- associationTest(sce) %>% 
+  tibble::rownames_to_column() %>%
+  dplyr::filter(pvalue < 1e-10)
+
+asso_genes <- assoRes$rowname 
+```
+
+
+```{r run_clusterExperiment, message = FALSE}
+
+# Clustering expression patterns
+
+nPointsClus <- 20
+#clusterExperiment::listBuiltInFunctions()
+
+clustPat <- clusterExpressionPatterns(sce, nPoints = nPointsClus,
+                                     genes = asso_genes)
+
+saveRDS(clustPat, file = "rds/6_clusterExperiment.rds")
+```
+
+```{r clusterExperiment_df , fig.width = 12, fig.height = 12}
+clustPat <- readRDS(file = "rds/6_clusterExperiment.rds")
+
+clusterLabels <- primaryCluster(clustPat$rsec)
+#clustPat
+genesWithinClust <- rownames(clustPat$yhatScaled[clusterLabels == 2, ])
+(genesWithinClust)[5]
+
+cUniq <- unique(clusterLabels)
+cUniq <- cUniq[!cUniq == -1] # remove unclustered genes
+cUniq <- sort(cUniq)
+
+plots <- list()
+for (xx in cUniq[1:10]) {
+  cId <- which(clusterLabels == xx)
+  p <- ggplot(data = data.frame(x = 1:nPointsClus,
+                                y = rep(range(clustPat$yhatScaled[cId, ]),
+                                        nPointsClus / 2)),
+              aes(x = x, y = y)) +
+    geom_point(alpha = 0) +
+    labs(title = paste0("Cluster ", xx),  x = "Pseudotime", y = "Normalized expression") +
+    theme_classic()
+  for (ii in 1:length(cId)) {
+    geneId <- rownames(clustPat$yhatScaled)[cId[ii]]
+    p <- p +
+      geom_line(data = data.frame(x = rep(1:nPointsClus, 2),
+                                  y = clustPat$yhatScaled[geneId, ],
+                                  lineage = rep(0:1, each = nPointsClus)),
+                aes(col = as.character(lineage), group = lineage), lwd = 1.5)
+  }
+  p <- p + guides(color = FALSE) +
+    scale_color_manual(values = c("orange", "darkseagreen3"),
+                       breaks = c("0", "1"))  
+  plots[[as.character(xx)]] <- p
+}
+plots$ncol <- 3
+
+do.call(cowplot::plot_grid, plots)
+
+```
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
+
+## Solutions
+
+1. TB_sce <- TB_sce[, colData(TB_sce)$subclusters_names == "NMps" | colData(TB_sce)$subclusters_names == "Maturation zone"| colData(TB_sce)$subclusters_names == "Posterior PSM" | colData(TB_sce)$subclusters_names == "Pou5f3+ Posterior NT"]
+
+

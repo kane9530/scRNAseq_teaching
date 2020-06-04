@@ -1,0 +1,163 @@
+# Differentially Expressed Genes 
+
+## Visualisation of marker genes in our dataset
+
+Genes that are differentially expressed between clusters drive the separation of the clusters. We call these genes the `marker genes` for the cluster. If the clusters correspond to our biologically meaningful notion of a cell type, then these marker genes are akin to the cell-type specific markers that identifies these cells. By using our existing biological knowledge, we can annotate the function of these genes and use this to assign a cell type identity for each cluster. Alternatively, we can obtain a list of marker genes and check for novel genes that mark the cell type. 
+
+We can easily assess the accuracy of our clustering by looking at the distribution of known marker genes across the different clusters. For instance, `tbx16` and `msgn1` mark the nascent presomitic mesoderm whilst `sox2` and `sox3` are the neuronal markers. 
+
+```{r, message = FALSE}
+library(Seurat)
+library(tidyverse)
+library(gridExtra)
+library(scales)
+library(extrafont) 
+loadfonts(quiet = TRUE)
+
+```
+
+*Q1) What other markers would be interesting to visualise for this dataset?*
+
+
+```{r clusteringAnalysis, message = FALSE, fig.width=15, fig.height=15, fig.cap = "Figure 1- UMAP visualisation of cells labelled with the expression of marker genes."}
+
+hpf18_seurat <- readRDS("rds/hpf18_seurat_dimred_new.rds")
+hpf18_seurat<- SetIdent(hpf18_seurat, value = hpf18_seurat@meta.data$seurat_clusters_names)
+
+markergenes <- c("tbx16", "msgn1", "ta", "sox2", "sox3", "pax6a", "krt8", "pfn1", "krt4", "pitx1", "hand2", "entpd1")
+
+#Visualizing marker genes 
+FeaturePlot(object = hpf18_seurat, features= markergenes, cols = colorspace::sequential_hcl(4, "Viridis"), reduction= "umap", label = FALSE)
+
+```
+
+*Q2) What additional information does the violin plot provide over the feature plot? How does the violin plot differ from a box plot?*
+
+
+```{r all_violinplot, fig.width=15, fig.height=15, fig.cap = "Figure 2- Violin plot of the marker genes."}
+
+VlnPlot(object = hpf18_seurat, features = markergenes, ncol = 3)
+```
+## Obtaining a list of differentially expressed genes
+
+Seurat's `FindAllMarkers` function allows us to easily compute these DEGs. The important arguments in this function are:
+
+1. only.pos: Setting this to TRUE returns only the marker genes that are upregulated in the cluster.
+2.test: This determines the statistical test for differential expression.
+3. min.pct: The default is 0.25. This means that it will only test genes that are detected in a minimum fraction of 0.25 cells in either of the 2 clusters being compared.
+
+For a complete list, see the [documentation](https://www.rdocumentation.org/packages/Seurat/versions/3.1.4/topics/FindAllMarkers)
+
+*Q3) How would you go about comparing a cluster of interest with another cluster?* 
+
+```{r DEG,fig.width=12, fig.height=18}
+#Obtaining DEGs
+
+cells.markers.wilcox <- FindAllMarkers(object = hpf18_seurat, only.pos = TRUE, test = "wilcox", min.pct = 0.25, 
+    thresh.use = 0.25)
+
+write.table(file = "hpf18_wilcoxon.txt", cells.markers.wilcox, sep = "\t")
+
+View(cells.markers.wilcox)
+
+```
+
+*Q4) Have a go at customizing the heatmap. How would you quickly check for the arguments in the function? *
+
+```{r DEG heatmap, fig.width = 12, fig.height = 15, fig.cap = "Figure 3- Heatmap of differentially expressed genes in each cluster of the single-cell data. "}
+
+top3_wilcox <- cells.markers.wilcox %>% group_by(cluster) %>% top_n(3, avg_logFC)
+DoHeatmap(object = hpf18_seurat, features = top3_wilcox$gene, label = FALSE)
+
+```
+
+## Analysing output of the wilcoxon test
+Text below taken from Seurat's [differential expression vignette](https://satijalab.org/seurat/v3.0/de_vignette.html)
+
+The results data frame has the following columns:
+
+- p_val : p_val (unadjusted)
+-bavg_logFC : log fold-chage of the average expression between the two groups. Positive values indicate that the feature is more highly expressed in the first group.
+- pct.1 : The percentage of cells where the feature is detected in the first group
+- pct.2 : The percentage of cells where the feature is detected in the second group
+- p_val_adj : Adjusted p-value, based on bonferroni correction using all features in the dataset.
+
+```{r}
+wilcoxon <- read.table("hpf18_wilcoxon.txt")
+wilcoxon <- wilcoxon %>% dplyr::select(gene, cluster, p_val_adj, avg_logFC) %>% 
+  dplyr::mutate(test = "wilcoxon") %>% 
+  group_by(cluster) %>% 
+  dplyr::arrange(cluster, desc(avg_logFC))%>%
+  top_n(20, avg_logFC)
+
+write.csv(wilcoxon, file = "wilcoxon_dim25.csv")
+```
+## Visualising the expression of the marker genes
+
+Figure 2b) of Cao et al., 2019- Cluster vs marker gene dot plot
+```{r dotplot_all, fig.width=15, fig.height=12, fig.cap="Figure 4- Dot plot displaying the top marker gene for each cluster."}
+hpf18_seurat <- readRDS("rds/hpf18_seurat_dimred_new.rds")
+wilcoxon <- read.table("hpf18_wilcoxon.txt")
+
+Idents(hpf18_seurat) <- "seurat_clusters_names"
+
+features <- wilcoxon %>%
+  filter(!(str_detect(gene, "si:")|str_detect(gene, "wu:")|str_detect(gene, "LOC")|str_detect(gene, "MGC")|str_detect(gene, "zgc:"))) %>%
+  group_by(cluster)%>%
+  top_n(n=-1, wt= p_val_adj) %>%
+  top_n(n=1, wt=avg_logFC) %>%
+  dplyr::select(cluster,gene)
+
+a <- DotPlot(hpf18_seurat, features = features$gene) + 
+  #RotatedAxis() + 
+  scale_color_gradient2(low = "red", mid = "white",high = muted("blue"), midpoint = 0) + 
+  guides(size = guide_legend(title = 'Percent of cells in cluster expressing feature'))+
+  theme_bw(base_size=14) + 
+  ylab("Cluster Name")+
+  theme(legend.text=element_text(face="bold"), plot.title = element_text(hjust = 0.5),
+        text=element_text(family="Arial"),
+        axis.text.x = element_text(angle = 90, hjust=1)) 
+
+a
+```
+
+```{r dotplot_TB , fig.width=15, fig.height=12, fig.cap ="Figure 5- Dot plot showing the distribution of the tailbud marker genes across all clusters"}
+#unique(wilcoxon$cluster)
+TB_features <- wilcoxon %>%
+  group_by(cluster) %>%
+  filter(cluster == "18hpf-tailbud - spinal cord" | cluster == "18hpf-tailbud - PSM" ) %>%
+  top_n(n=-10, wt= p_val_adj) %>%
+  top_n(n=-10, wt=avg_logFC) %>%
+  dplyr::select(cluster,gene)
+
+b <- DotPlot(hpf18_seurat, features = TB_features$gene) + 
+  RotatedAxis() + 
+  scale_color_gradient2(low = "red", mid = "white",high = muted("blue"), midpoint = 0) + 
+  guides(size = guide_legend(title = 'Percent of cells in cluster expressing feature'))+
+  theme_bw(base_size=14) + 
+  ylab("Cluster Name")+
+  theme(legend.text=element_text(face="bold"), plot.title = element_text(hjust = 0.5),
+        text=element_text(family="Arial"),
+        axis.text.x = element_text(angle = 90, hjust=1)) 
+
+b
+#DoHeatmap(object = hpf18_seurat_cc, slot = "scale.data", assay = "SCT", features = TB_features$gene, size = 3) + RotatedAxis() 
+
+```
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
+
+## Solutions
+
+1. Any marker that you like- that's part of the exploration! :)
+2. The feature plot gives a qualitative view of the expression distribution; the violin plot quantifies the distribution. The violin plot It shows the full distribution of the data, which is especially useful in the case of multimodality (multiple peaks in the data)
+3. Use the `FindMarkers` function. To obtain the DEGs for cluster A against cluster B, set the ident.1 to cluster A and ident.2 to the target cluster B.
+4. ?DoHeatmap
+

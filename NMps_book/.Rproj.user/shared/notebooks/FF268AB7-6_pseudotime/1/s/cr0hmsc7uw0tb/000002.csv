@@ -1,0 +1,4 @@
+"0","assoRes <- associationTest(sce)
+"
+"2","Error in associationTest(sce) : object 'sce' not found
+"

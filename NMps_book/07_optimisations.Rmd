@@ -1,0 +1,416 @@
+# Optimisations
+
+## Importing libraries
+```{r, message = FALSE}
+library(SingleCellExperiment)
+library(Seurat)
+library(scran)
+library(tidyverse)
+library(scater)
+library(NMF)
+library(mclust)
+library(pheatmap)
+library(extrafont) 
+loadfonts(quiet = TRUE)
+```
+
+```{r, include = FALSE}
+mytheme <-  theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.title = element_text(size = 12, face = "bold"),
+      legend.text=element_text( size = 10), 
+      text=element_text(family="Arial")) 
+```
+## Importing Data
+```{r, message = FALSE}
+hpf18_seurat <- readRDS(file ="rds/hpf18_seurat_dimred_new.rds")
+hpf18_sce <- as.SingleCellExperiment(hpf18_seurat)
+
+```
+
+## Number of PCs to retain
+
+### Scree plot
+
+We plot the % of variance explained against the number of principal components. If the top few PCs capture most of the biological signal in our dataset, we expect that there should be a sharp drop between these PCs and the rest of the PCs that capture the technical noise. This drop resembles an 'elbow', and hence we are searching for the elbow in the scree plot. In general, methods that involve plotting the % of variance explained against some parameter of interest are called elbow methods, since the point of optimisation is where the said elbow occurs. In very high-dimensional datasets such as ours, it is not uncommon for there to be no clear elbow in the data.
+
+```{r PCA_elbow, fig.cap="Figure 1- Elbow plot for determining the number of principal components. There is a gradual drop in the % of variance explained in the data. The % variance explained for 12 PCs is highlighted by the red line. "}
+
+ep <- ElbowPlot(hpf18_seurat, ndims = 50, reduction = "pca") +
+  geom_vline(xintercept = 12,  color = "red", size=1.5, linetype="dotted") +
+  ylab(label = "Percentage of variance explained") + 
+  theme_bw() + theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    text=element_text(family="Arial"))
+ep
+
+```
+
+### Examining technical noise
+
+We use the functions available from the `scran` package in this section. 
+
+In this alternative method, we first model the mean-variance relationship of the technical noise in our dataset. This is how the relationship would look like, were there to be no biological signal at all. We can do this by a parametric method in the `modelGeneVar` function. That is to say, we assume the functional form of the noise as a non-linear curve of the form: $y = \frac{ax}{x^n + b}$
+
+Alternatively, we can make a more stringent assumption that the data trend should follow a poisson distribution. This is implemented in the `modelGeneVarByPoisson` function. 
+
+
+```{r PCA_tech_noise, fig.show = 'hold', out.width = '50%', fig.cap= "Figure 2- Variance in our dataset against the mean. Each point represents a gene and the blue curve is the fitted trend to all of the genes with a non-linear model."}
+set.seed(2020) ## For reproducibiity
+
+## We fit a non-linear curve to the variances against the means of the data.
+
+dec_sce <- scran::modelGeneVar(hpf18_sce)
+fit_sce <- metadata(dec_sce)
+plot(fit_sce$mean, fit_sce$var, xlab="Mean of log-expression",
+    ylab="Variance of log-expression")
+curve(fit_sce$trend(x), col="dodgerblue", add=TRUE, lwd=2)
+```
+
+```{r PCA_tech_poisson, fig.cap= "Figure 3- Variance in our dataset against the mean. Each point represents a gene and the blue curve is the fitted trend to all of the genes with a poisson model that is assumed to be the distributional form of the mean-variance relationship."}
+### Here, we assume that the technical noise can be modelled with a poisson distribution
+
+dec_pois_pbmc <- modelGeneVarByPoisson(hpf18_sce)
+plot(dec_pois_pbmc$mean, dec_pois_pbmc$total, pch=16, xlab="Mean of log-expression",
+    ylab="Variance of log-expression")
+curve(metadata(dec_pois_pbmc)$trend(x), col="dodgerblue", add=TRUE)
+```
+
+Using the `denoisePCA` function, we denoise the log-expression data by removing the principal components that correspond to technical noise. 
+
+```{r number of PCs}
+denoised_sce<- denoisePCA(hpf18_sce, technical=dec_sce, subset.row=getTopHVGs(dec_sce, prop=0.1))
+ncol(reducedDim(denoised_sce)) 
+
+denoised_sce_pois<- denoisePCA(hpf18_sce, technical=dec_pois_pbmc, subset.row=getTopHVGs(dec_pois_pbmc, prop=0.1))
+ncol(reducedDim(denoised_sce_pois)) # We hit the cap on the number of PCs
+
+```
+
+We can visualise the loadings (coefficients in the linear combination) of the top genes in each principal component with Seurat's `VizDimLoadings` function. 
+
+We can also plot a heatmap for each principal component. This heatmap sorts cells and genes by their principal component scores, allowing us to identify the drivers of variation in each PC.
+
+```{r PCA_dim_visual, fig.cap="Figure 4- PCA heatmaps of the first two components"}
+#Seurat::VizDimLoadings(hpf18_seurat, dims = 1:10, reduction = "pca")
+Seurat::DimHeatmap(hpf18_seurat, dims = 1:2, cells = 500, balanced = TRUE)
+```
+
+## Evaluating clustering results
+
+The explanation and code below is adapted from [osca](https://osca.bioconductor.org/clustering.html#cluster-bootstrapping)
+
+### Cluster stability
+
+Stable clusters are desirable as small changes in our data preprocessing will not cause a major change in the cell assignment. To do this, scran performs sampling with replacement (bootstrap) on the dataset with the `bootstrapCluster` function and then recomputes the clustering on this newly sampled dataset.
+
+The heatmap displays a matrix (we call it $A$) of coassignment probabilities. The entry $A_{ij}$ in $A$ corresponds to the probability that a randomly chosen cell from cluster $i$ is found in cluster $j$. In the extreme case, a perfect clustering would have a probability of 1 for all diagonal entries, and 0 elsewhere.
+
+```{r clust_stability, fig.cap= "Figure 5- Heatmap of coassignment probabilities from bootstrapping of the dataset and reclustering cells "}
+
+seurat_clusters <- colData(hpf18_sce)$seurat_clusters
+
+myClusterFun <- function(x){
+  g <- buildSNNGraph(x, use.dimred = "PCA", type = "jaccard")
+  igraph::cluster_louvain(g)$membership
+}
+
+set.seed(2020)
+coassign <- bootstrapCluster(hpf18_sce, FUN = myClusterFun, clusters = seurat_clusters)
+
+pheatmap(coassign, cluster_row=FALSE, cluster_col=FALSE,
+    color=rev(viridis::magma(100)))
+
+```
+
+### Cluster separability
+
+Ideally, our clusters are well-separated from each other. The definition of modularity was provided in chapter 2. In essence, it is the difference between the observed edge weights between nodes belonging to the same cluster and expected edge weights if the edges were wired randomly. A high modulaity score would imply that most edges occur between cells in the same cluster, suggesting that the clusters are well-separated as edges are not formed between cells of different clusters.
+
+Recall from our previous discussion that in the SNN graph, an edge is drawn between two cells if they have a neighbor in common. The edge weight describes the degree of similarity via the rank of its shared neighbors. 
+
+```{r clust_separation, fig.cap="Figure 6- Heatmap of the cluster modularity. Each entry along the heatmap diagonal represents the ratio of the total weight between nodes in the same cluster relative to a null model of randomly connected edges."}
+g <- buildSNNGraph(hpf18_sce, use.dimred = "PCA", type = "jaccard")
+ratio <- clusterModularity(g, seurat_clusters, as.ratio = TRUE)
+pheatmap(log2(ratio+1), cluster_rows=FALSE, cluster_cols=FALSE,
+    color=colorRampPalette(c("white", "blue"))(100))
+
+```
+
+We can create a graph in which the nodes are clusters, instead of cells. Here, a high edge weight is represented by a thicker edge, and corresponds to a greater degree of reallocation of cells between the 2 clusters. 
+
+```{r graph_adj, fig.cap="Figure 7- Force-based layout depicting the relationships between clusters. Each node is a cluster, and the edge weight represents the ratio of the observed to expected sum of weights between each pair of clusters."}
+cluster.gr <- igraph::graph_from_adjacency_matrix(log2(ratio+1), 
+    mode="upper", weighted=TRUE, diag=FALSE)
+
+# Increasing the weight to increase the visibility of the lines.
+set.seed(2020)
+plot(cluster.gr, edge.width=igraph::E(cluster.gr)$weight*10,
+    layout=igraph::layout_with_fr)
+
+```
+
+## Comparison with authors' labels
+
+### Concordance in tailbud cluster assignment
+
+In this section, we seek the answer to the question: to what extent does our clustering labels correspond to the authors' original clustering results? In the original paper, the authors used t-SNE to reduce the dimensions of the data, followed by clustering the cells on this reduced dimensions with density peak clustering. 
+
+In our pipeline, we utilised Seurat's approach of first constructing a shared-nearest neighour graph (SNN graph) using the PCA components, prior to clustering with the louvain algorithm, a graph-based clustering method. To what extent are these methods concordant?
+
+In the table below, the `clusterNames` column indicates the cell's original cluster label. Recall that the identities of these two clusters (tailbud-PSM and tailbud-spinal cord) correspond to the cluster name that occurs most frequently. Therefore, with the exception of a perfect correspondence with the authors' clusters, we expect that each cluster should be somewhat heterogeneous in the cell labels as some of the cell labels should differ with the assigned cluster labels. The `seurat_clusters_names` column indicates the assigned cluster name. 
+
+```{r}
+allLabelsAgainstClusters <- hpf18_seurat@meta.data %>% 
+  dplyr::select(clusterNames, seurat_clusters, seurat_clusters_names)%>%
+  na.omit()%>%
+  group_by(clusterNames, seurat_clusters_names) %>%
+  summarize(Cell_Numbers=n())%>%
+  group_by(seurat_clusters_names)%>%
+  dplyr::mutate(Percentage_seurat = Cell_Numbers / sum(Cell_Numbers)*100)%>%
+  dplyr::filter(seurat_clusters_names == "18hpf-tailbud - PSM" |
+                seurat_clusters_names == "18hpf-tailbud - spinal cord")%>%
+  ungroup()%>%
+  tidyr::complete(clusterNames, seurat_clusters_names, fill = list(Cell_Numbers = 0, Percentage_seurat = 0))
+
+allLabelsAgainstClusters
+```
+We visualise our results with a ggplot heatmap using the `geom_tile` function.
+
+```{r, concordance heatmap, fig.cap = "Figure 8- Heatmap of the authors cell labels against our assigned cluster labels. The majority of cells in our assigned tailbud clusters were also mapped to the same clusters in the authors' original clustering."}
+a1 <- ggplot(allLabelsAgainstClusters, aes(x = seurat_clusters_names, y = clusterNames, fill = Cell_Numbers)) + 
+  geom_tile(aes(fill = Cell_Numbers), size=0.5) +
+  geom_text(aes(label=Cell_Numbers), alpha=1.0, size=3, colour = "gray78")+
+  labs(x="Clusters",y="Author's labels")
+
+a2 <- a1 +viridis::scale_fill_viridis(name = "Cell Number") + 
+  scale_x_discrete(expand=c(0,0), name = "Clusters", labels = c("18hpf-tailbud - PSM", "18hpf-tailbud - spinal cord"))+
+  theme_bw(base_size=10) +
+  theme(legend.text=element_text(face="bold"), plot.title = element_text(hjust = 0.5),
+        panel.border=element_blank(), text=element_text(family="Arial"))
+
+a2
+```
+
+### Optimising the seurat clustering parameters
+
+One reason why we observe a disparity between the clustering results could be because our chosen parameters were not optimised for the correspondence. In other words, it is possible that the degree of concordance could be improved with a better clustering resolution in the `FindClusters` function for example.
+
+The function below first assigns a clustername to the clusters identified from seurat. Then, we filter for cells that are assigned to the two tailbud clusters, either in our assignment or the authors' original assignment. Finally, we group cells into one of 3 categories:
+- Present in the tailbud clusters from our assignment but not in the authors (`in_mine_only`)
+- Present in the tailbud clusters from the authors' dataset but not in ours (`in_authors_only`)
+- Present in the tailbud clusters from both approaches (`in_both`)
+
+```{r myoptim }
+
+myoptim <- function(reso,myObj){
+  
+  myObj <- Seurat::FindNeighbors(hpf18_seurat,  dims = 1:12, k.param = 20, reduction = "pca", verbose = FALSE)
+  myObj <- Seurat::FindClusters(hpf18_seurat, algorithm = 1, resolution = reso, verbose = FALSE) 
+  
+  #Finding correspondence between cluster numbers AND authors' labels
+  clusterIDlabels <- myObj@meta.data %>% 
+  dplyr::select(clusterNames, seurat_clusters)%>%
+  na.omit()  %>%
+  group_by(clusterNames, seurat_clusters) %>%
+  summarize(Cell_Numbers=n())%>%
+  tidyr::complete(seurat_clusters)%>%
+  replace_na(list(Cell_Numbers = 0))%>%
+  group_by(seurat_clusters)%>%
+  top_n(n=1, wt=Cell_Numbers) %>%
+  arrange(seurat_clusters) %>%
+  dplyr::select(seurat_clusters, clusterNames)
+
+  # Assigning mapping to seurat object
+  myObj@meta.data$seurat_clusters_names <- clusterIDlabels$clusterNames[match(myObj@meta.data$seurat_clusters,  clusterIDlabels$seurat_clusters)]
+  
+  
+  # Selecting cells that are either assigned the authors'TB labels OR fall into the TB clusters
+  myObj_subsetted <- myObj@meta.data %>%
+    rownames_to_column("cell")%>%
+    dplyr::filter(seurat_clusters_names ==    "18hpf-tailbud - PSM" | 
+                  seurat_clusters_names == "18hpf-tailbud - spinal cord" |
+                  clusterNames == "18hpf-tailbud - PSM" |
+                  clusterNames == "18hpf-tailbud - spinal cord") %>%
+    dplyr::mutate(WithinTBCluster = ifelse((seurat_clusters_names == "18hpf-tailbud - PSM" |seurat_clusters_names == "18hpf-tailbud - spinal cord") &
+                                           !(clusterNames == "18hpf-tailbud - PSM" |
+                                             clusterNames == "18hpf-tailbud - spinal cord"),
+                                            "in_mine_only", 
+                                           ifelse(!(seurat_clusters_names == "18hpf-tailbud - PSM" |
+                                           seurat_clusters_names == "18hpf-tailbud - spinal cord") &
+                                            
+                                             (clusterNames == "18hpf-tailbud - PSM" |
+                                             clusterNames == "18hpf-tailbud - spinal cord"),
+                                           "in_authors_only", "in_both")), 
+                                            reso_used = reso) %>%
+    dplyr::select(cell, clusterNames, seurat_clusters_names, WithinTBCluster,reso_used) 
+  return (myObj_subsetted)
+}
+
+```
+
+We provide a range of clustering resolutions to assess their impact on the concordance rate.
+
+```{r clust_df}
+#Inputting parameters
+
+cluster_reso <- c(0.4,0.8, 1.2, 1.6, 2.0, 2.4)
+
+myDF <- mapply(myoptim, reso = cluster_reso, MoreArgs = list(myObj="hpf18_seurat"),
+               SIMPLIFY = FALSE) 
+
+myDF <- do.call(rbind, myDF)
+
+```
+
+To assess the clustering result, we examine the following two measures:
+
+1. [Adjusted Rand Index](https://davetang.org/muse/2017/09/21/the-rand-index/)
+2. [Entropy](https://stackoverflow.com/questions/35709562/how-to-calculate-clustering-entropy-a-working-example-or-software-code)
+
+```{r clust_indices}
+
+clustering_optim <- myDF %>%
+  group_by(reso_used, WithinTBCluster)%>%
+  summarize(numbers = n())%>%
+  mutate(percentage = numbers / sum(numbers) * 100)
+
+adjusted_rand_index <- myDF %>%
+  group_by(reso_used) %>%
+  mutate(ARI = adjustedRandIndex(seurat_clusters_names, clusterNames)) %>%
+  dplyr::select(reso_used, ARI) %>%
+  distinct() 
+
+entropy <- myDF %>%
+  group_by(reso_used)%>%
+  mutate(entropy = NMF::entropy(as.factor(seurat_clusters_names),   as.factor(clusterNames), method = "mean")) %>%
+  dplyr::select(reso_used,entropy) %>%
+  distinct()
+
+clustering_optim <- list(adjusted_rand_index, clustering_optim, entropy) %>% purrr::reduce(left_join, by = "reso_used") 
+
+clustering_optim$ARI[duplicated(clustering_optim$ARI)] <- NA
+clustering_optim$entropy[duplicated(clustering_optim$entropy)] <- NA
+clustering_optim$reso_used <-paste("res=", clustering_optim$reso_used)
+
+# Adjusting order of factors
+clustering_optim$WithinTBCluster <- factor(clustering_optim$WithinTBCluster, 
+                                           levels = c("in_both", "in_authors_only", "in_mine_only"))
+
+
+```
+
+
+```{r facet_optim, fig.cap = "Figure 9- Facetted bar plots of the cluster assignments across 6 louvain clustering resolutions. The Adjusted rand index and entropy for the cluster assignments are displayed."}
+
+# Facet plot: proportion falling into diff categories while varying k and res
+
+multiplot <- ggplot(clustering_optim, aes(x = WithinTBCluster, y = percentage)) +
+  geom_bar(data = clustering_optim, mapping = aes(fill = WithinTBCluster), stat =     
+             "identity") +
+  facet_wrap(vars(reso_used), ncol=3) +
+  geom_text(aes(label = sprintf("%.1f", percentage), group = WithinTBCluster),angle=0,  
+            size = 3, position = position_dodge(width = 1),vjust = 0.7, colour = 
+            "grey5",fontface = "bold") +
+  geom_text(aes(label = ifelse(is.na(ARI), "",  paste("ARI =", sprintf("%.3f", ARI), sep =" ")), group = reso_used),inherit.aes=FALSE, x = 2.7, y= 80, size =3) +
+  geom_text(aes(label = ifelse(is.na(entropy), "",  paste("H =", sprintf("%.3f", 
+                                                                         entropy), sep 
+                                                          =" ")), group = reso_used), 
+            inherit.aes=FALSE, x = 2.7, y= 70, size =3) +
+  scale_fill_brewer(palette = "Accent", labels = c("shared", "in authors' cluster only", 
+                                                   "in my assigned cluster only"),name = 
+                    "Cluster Assignments") +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle=60, hjust=1),axis.title.x=element_blank(), text=element_text(family="Arial"))
+
+multiplot
+
+```
+
+```{r entropy, fig.cap="Figure 10- Entropy plot across 6 louvain clustering resolutions."}
+entropy <- myDF %>%
+  group_by(reso_used)%>%
+  mutate(entropy = NMF::entropy(factor(seurat_clusters_names), clusterNames, method = "mean")) %>%
+  dplyr::select(reso_used, entropy) %>%
+  distinct()
+
+entropyPlot <- ggplot(data = entropy, aes(x = reso_used, y = entropy)) +
+  geom_point(aes(color = as.factor(reso_used)))+
+  geom_line(alpha = 0.5, linetype = "dotted") +
+  scale_color_viridis_d("Louvain\nResolution") +
+  scale_x_continuous(breaks = cluster_reso)+
+  scale_y_continuous(limits = c(0.07,0.3))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 1),
+        text=element_text(family="Arial"))
+entropyPlot
+```
+
+## Selecting cells for downstream analysis
+
+For our downstream analysis, we would like to keep cells that are consistently identifed across both analyses, across all clustering resolutions, to belong to the tailbud cluster. The code below calculates this.
+
+```{r}
+#myDF$WithinTBCluster <- as.factor(myDF$WithinTBCluster)
+
+labelCount <- myDF %>%
+  group_by(cell, WithinTBCluster)%>%
+  summarize(numbers = n()) %>%
+  filter(WithinTBCluster == "in_both")
+
+max_count <- max(labelCount$numbers)
+labelCountTable <- table(factor(labelCount$numbers, levels = 0:max_count))
+labelCountdf <- data.frame("Occurences" = 0:max_count,
+                           "Number_of_Cells" = as.numeric(labelCountTable))
+labelCountdf
+```
+
+```{r, fig.cap= "Figure 11- Bar plots of number of cells against the total number of iterations. The height of each bar represents the number of cells that are assigned to the tailbud clusters by both the authors' and my labels, for a given number of clustering resolutions. For instance, 551 cells were assigned by the authors' and me to belong to the tailbud cluster across all 6 clustering resolutions."}
+cols <- c(scales::hue_pal()(nrow(labelCountdf)), "#FFFFFF")
+
+labelCountPlot <- ggplot(data = labelCountdf, aes(x=Occurences, y = Number_of_Cells)) +
+  geom_bar(mapping = aes(fill = as.factor(Occurences)), stat = "identity") + 
+  geom_text(aes(label = Number_of_Cells, group = Occurences),angle=0, size = 3,
+            colour = "grey5", vjust = -0.6, fontface = "bold") +
+  scale_fill_manual(values = cols) +
+  scale_x_discrete(name = "Total number of iterations" , limits = c(0:max_count)) +
+  ylab(label = "Cell Number") +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 600))+
+  theme_bw() +
+  theme(
+    legend.position = "none",
+    axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    text=element_text(family="Arial"))
+
+labelCountPlot
+
+```
+
+```{r}
+myCells <- labelCount[labelCount$numbers == max_count, ]$cell
+length(myCells)
+
+hpf18_seurat$TB <- colnames(hpf18_seurat) %in% myCells # Creating this column to facilitate subclustering in chapter 5.
+saveRDS(hpf18_seurat, file = "rds/hpf18_seurat_optimized551.rds" )
+
+```
+
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
