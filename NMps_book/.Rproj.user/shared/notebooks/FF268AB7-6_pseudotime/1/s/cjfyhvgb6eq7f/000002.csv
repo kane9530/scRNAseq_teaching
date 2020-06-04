@@ -1,0 +1,12 @@
+"0","```r
+table(colData(TB_sce)$subclusters_names)
+
+```"
+"1","
+     Maturation zone      Nascent somites                 NMps 
+                  62                   76                   47 
+        Posterior NT        Posterior PSM Pou5f3+ Posterior NT 
+                 103                  140                   73 
+        Tail somites 
+                  50 
+"

@@ -1,0 +1,309 @@
+# Subclustering
+
+## Importing libraries
+
+```{r, message = FALSE}
+library(Seurat)
+library(tidyverse)
+library(RColorBrewer)
+
+```
+
+```{r, include=FALSE}
+mytheme <-  theme(axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y=element_blank(),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.title = element_text(size = 12, face = "bold"),
+      legend.text=element_text( size = 10), 
+      text=element_text(family="Arial")) 
+```
+
+## Importing Data
+```{r, message = FALSE}
+hpf18_seurat <- readRDS(file = "rds/hpf18_seurat_optimized551.rds" )
+
+```
+
+## Subclustering the TB cells - Using only cells that are assigned to the 'shared' cluster across all the clustering resolutions.
+
+```{r}
+TBcells <- subset(hpf18_seurat, subset = TB == TRUE)
+TBcells
+```
+
+## Dimensional reduction with UMAP and clustering
+```{r}
+# Running PCA
+TBcells <- RunPCA(TBcells, npcs = 50)
+
+# Elbow plot to determine number of PCs for dimension reduction
+
+ep <- ElbowPlot(TBcells, ndims = 50, reduction = "pca") +
+  geom_vline(xintercept = 25,  color = "red", size=1.5, linetype="dotted") +
+  ylab(label = "Percentage of variance explained") + 
+  theme_bw() + theme(axis.line = element_line(colour = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    text=element_text(family="Arial"))
+
+# UMAP embedding and clustering
+ep
+TBcells <- RunUMAP(TBcells, dims = 1:25,  min.dist = 0.7, n.neighbors = 30L, verbose = TRUE)
+TBcells <- Seurat::FindNeighbors(TBcells, dims = 1:25, k.param = 20, verbose = FALSE) 
+TBcells <- Seurat::FindClusters(TBcells, algorithm = 1, resolution = 1, verbose = FALSE)
+```
+
+## Identifying marker genes for each cluster 
+
+```{r subclusters_DEG, fig.width = 12, fig.height = 15 }
+# Setting identity for cells to seurat clustering results
+
+TBcells<- SetIdent(TBcells, value = TBcells@meta.data$seurat_clusters) 
+
+all_clusters <- FindAllMarkers(TBcells, test.use = "wilcox", only.pos = TRUE) %>%
+  group_by(cluster)%>%
+  filter(p_val_adj < 0.05)%>%
+  arrange(cluster, desc(abs(avg_logFC)),p_val_adj)
+
+#write.csv(all_clusters,file = "Files/2g)MarkerGenes_9Clusters.csv")
+
+# Viewing number of cells in each cluster
+
+table(TBcells@meta.data$seurat_clusters)
+
+# Plot a heatmap to visualize the top 7 marker genes in each cluster. 
+
+top7_wilcox <- all_clusters %>% group_by(cluster) %>% top_n(7, avg_logFC)
+DoHeatmap(object = TBcells, features = as.character(top7_wilcox$gene), label = FALSE) +
+   theme(legend.title = element_text(size = 25),
+         axis.line=element_blank(),
+      axis.text.x=element_blank(),
+      axis.text.y = element_text(size = 15),
+      axis.ticks=element_blank(),
+      axis.title.x=element_blank(),
+      axis.title.y=element_blank(),
+      legend.text=element_text(face="bold", size = 25), 
+      text=element_text(family="Arial"))  
+
+#ggsave("2g)AllClusters_markerGeneHeatmap.tiff", hm, dpi = 500, width = 17, height = 17,units = c("cm"))
+```
+
+```{r check_DEG}
+top7_wilcox
+```
+
+## Merging clusters that do not appear distinct
+
+```{r merge_meso}
+# Merging the two mesodermal clusters 1 and 4
+
+meso <- subset(x = TBcells, subset = (seurat_clusters == "1" | seurat_clusters == "5"))
+meso_ids <- rownames(meso@meta.data)
+TBcells@meta.data$seurat_clusters[rownames(TBcells@meta.data) %in% meso_ids] <- 1
+
+```
+## Plotting UMAP and assigning cluster labels
+```{r subclusters_names}
+
+labelList <- data.frame(clusterID = c(0,1,2,3,4,6,7), 
+                        clusterNames = c("Posterior NT", 
+                                         "Posterior PSM",  
+                                        "Nascent somites",
+                                        "Pou5f3+ Posterior NT",
+                                        "Maturation zone", 
+                                        "Tail somites", 
+                                        "NMps"))
+
+TBcells$subclusters_names <- labelList$clusterNames[match(TBcells$seurat_clusters, labelList$clusterID)]
+TBcells$subclusters_names <- factor(TBcells$subclusters_names)
+TBcells<- SetIdent(TBcells, value = TBcells@meta.data$subclusters_names)
+
+```
+
+## Checking the marker genes for each cluster
+
+```{r check_subclusters_violin, fig.width = 8, fig.height=12}
+marker_genes <- c("sox2", "ta", "pou5f3", "olig4", "zic5","tbx6", "tbx16","msgn1","meox1", "mespab", "cyp26a1", "ripply1")
+VlnPlot(object = TBcells, features = marker_genes, ncol = 3)
+```
+
+```{r UMAP_subclusters, fig.width = 8, fig.height = 8}
+# Plotting UMAP dimplot with cluster labels
+
+cols <- c(scales::hue_pal()(7), "#FFFFFF")
+
+DimPlot(TBcells, label = TRUE, label.size = 5, pt.size=0.6)+
+  scale_color_manual(values = cols, name = "Cluster Identities")+
+  mytheme
+
+#ggsave("2g)TBsubset.tiff", tbsubset_plt, dpi = 500, width = 17, height = 13,units = c("cm"))
+#saveRDS(TBcells, file = "rds/2g)TBcells_24.10.19.rds")
+```
+## Sox2 tbxta coexpression
+```{r sox2ta_coexp}
+
+# Plotting co-expression of sox2 and ta in TBcells
+
+FeaturePlot(TBcells, features = c("sox2", "ta"), blend = TRUE, pt.size = 1, blend.threshold = 0.5)
+#ggsave("2g)sox2_ta_coexp.tiff", coexp, dpi = 400, width = 12, height = 6,units = c("cm"))
+
+```
+## Viewing genes of interest with a dotplot
+```{r specify_genes}
+# Looking at only cells in the NM decision
+
+TBcells_nmdecision <- subset(TBcells, subset = subclusters_names == "Neuromesodermal Progenitors" |
+                              subclusters_names == "Maturation zone" | 
+                              subclusters_names == "Pou5f3+ Posterior NT" |
+                              subclusters_names == "Posterior NT")
+# Specifying genes to visualize
+nm_genes <- c("cyp26a1","eve1","fgf8a","hoxa13b","hoxc13a","hoxc13b","sox2","ta","wnt8a")
+meso_genes <- c("aldh1a2", "apoc1l","bmp10", "her1", "her7", "msgn1","snai1a","tbx6","tbx16","tbx24","uncx4.1", "meox1", "mespab")
+neural_genes <- c("gfap", "sox3", "prtga", "zic2a", "zic5")
+
+```
+
+```{r nm_dotplot}
+DotPlot(TBcells, features = nm_genes) + 
+    theme(text = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.text.x = element_text(size = 8, angle = 35))
+```
+
+```{r meso_dotplot}
+DotPlot(TBcells, features = meso_genes) + 
+    theme(text = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.text.x = element_text(size = 8, angle = 35))
+```
+
+```{r neural_dotplot}
+DotPlot(TBcells, features = neural_genes) + 
+    theme(text = element_text(size = 8),
+          axis.text.y = element_text(size = 8),
+          axis.text.x = element_text(size = 8, angle = 35))
+```
+
+*Q1) How would you save the images in the  working directory?* 
+
+## Exporting the violin plots for genes of interest.
+
+We loop over each violin plot using the `lapply` function, which merits additional comment.The apply family of functions is very useful to perform an action repeatedly on a collection of objects such as a dataframe, vector, list etc. Normally iteration is done with a for loop, which is rather time-consuming. The apply function performs the iteration without the explicit use of a for loop. `lapply` returns a list. 
+
+*Q2) What is the difference between lapply and sapply?* 
+
+```{r all_violin}
+# Looking at expression of nmp markers over all clusters in individual violinPlots
+nmp_markers <- c(
+"fgf8a",
+"wnt8-2",
+"wnt8a",
+"ta",
+"apela",
+"eve1",
+"ndnf",
+"cyp26a1",
+"hoxc13b",
+"id3",
+"hoxc13a",
+"thbs2",
+"sp5l",
+"tagln3b",
+"mcamb",
+"her12",
+"hoxa13b",
+"hoxd12a",
+"kif26ab",
+"sox2",
+"prickle1b",
+"si:dkey-261h17.1",
+"cdh6",
+"cx43.4",
+"zgc:158328",
+"fndc3ba",
+"mnx1",
+"hes6",
+"znf703",
+"ube2e2",
+"angptl2b",
+"depdc7",
+"efhd2",
+"kdm6a",
+"nradd",
+"enc1",
+"snai1a",
+"arf1",
+"flrt3",
+"phgdh",
+"traf4a",
+"wls",
+"sepn1",
+"esrrga",
+"ptmab",
+"ptbp1b",
+"ptmaa",
+"mgat1b",
+"ubl3a",
+"sall4",
+"tuba8l4",
+"hoxd13a",
+"LOC100537138",
+"nog2",
+"h3f3a",
+"myclb",
+"sult6b1",
+"galnt2",
+"fgf4",
+"foxa",
+"bbc3",
+"hoxd11a",
+"rcn3",
+"plk4",
+"foxd3",
+"pip5k1ca",
+"sec22bb",
+"slc12a7b",
+"marveld1",
+"pcp4a"
+)
+
+#write.table(nmp_markers, file = "nmp_markergenes.txt")
+plots <- VlnPlot(object = TBcells, features =nmp_markers, combine = FALSE)
+plots <- lapply(X = plots, FUN = function(x) x +  theme(plot.title = element_text(size = 30),
+                        text = element_text(size = 15),
+                        axis.text.y = element_text(size = 12),
+                        axis.text.x = element_text(size = 12, angle = 35)))
+
+for (i in 1:length(plots)) {
+  ggsave(plot = plots[[i]], path = "violin_plots", filename = paste0("violin_",nmp_markers[i],".png"), width = 14, height = 10, units = "cm")
+}
+
+```
+
+## Saving RDS object
+```{r}
+saveRDS(TBcells, file = "rds/TBcells_subclustered.rds")
+```
+
+## Session Info
+
+<details><summary>View Session Info</summary>
+```{r, collapse = TRUE}
+devtools::session_info()
+  
+```
+</details>
+
+## Solutions
+
+1. Use the ggsave function. 
+- ggsave("2g)nm_dotplot.tiff", nm_dotplot, dpi = 400, width = 12, height = 8,units = c("cm"))
+- ggsave("2g)meso_dotplot.tiff", meso_dotplot, dpi = 400, width = 12, height = 8,units = c("cm"))
+- ggsave("2g)neural_dotplot.tiff", neural_dotplot, dpi = 400, width = 12, height = 8,units = c("cm"))
+2. lapply returns a list of the same length as the input vector. sapply (simple apply) returns a vector.
+

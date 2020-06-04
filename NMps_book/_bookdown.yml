@@ -1,0 +1,5 @@
+book_filename: "scRNAseq_NMps"
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: "Chapter "

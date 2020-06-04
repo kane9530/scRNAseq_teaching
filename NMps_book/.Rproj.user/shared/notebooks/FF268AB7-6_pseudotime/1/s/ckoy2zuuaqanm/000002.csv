@@ -1,0 +1,6 @@
+"0","```r
+sce_sling <- slingshot(TB_sce, clusterLabels = \"subclusters_names\", reducedDim = \"UMAP\", start.clus = \"NMps\" )
+
+```"
+"1","Using full covariance matrix
+"
