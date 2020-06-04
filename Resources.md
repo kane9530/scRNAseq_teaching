@@ -4,6 +4,9 @@ The start of a collection of resources that are useful for learning single-cell 
 ## Online Tutorials
 ### scRNA-seq 
 #### Workflows
+
+[Orchestrating Single-Cell Analysis](https://osca.bioconductor.org/): a really comprehensive guide for analysing single-cell data using bioconductor packages (`scater` and `scran`, rather than `seurat`). Includes step-by-step anaylsis of number of example datasets.
+
 Sanger single cell course:
 https://scrnaseq-course.cog.sanger.ac.uk/website/index.html.
 
