@@ -23,6 +23,8 @@ We hope that this will provide a good starting point for getting to grips with t
 
 [Dataset repository](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM3067194)
 
+[Presentation on 4th June 2020](https://drive.google.com/drive/folders/1_LYbUTTfQOl_BaLyNdtOO5AxdgFkDYyq)
+
 ## Prerequisites
 
 To follow the tutorial, you should have R (necessary) and Rstudio (Not necessary, but ideal) installed. Next, you should clone the git repository and then run the install.R file to 
