@@ -4,12 +4,18 @@
 
 This is the github repository for the “Hands-on guide to single cell RNA seq analysis in R computational workshop” series given to the AMA and Steventon labs on 4th June 2020.
 
+## Viewing in your browser
+
+Instead of running the code in RStudio, you can also view the code and the associated outputs in your browser. Select any .html file in the <strong>_book_html</strong> folder. This will lead you to the html output that we knitted from the RMarkdown files. 
+
 ## Objectives
 
 - The volume of online resources on the single-cell field is vast. We hope that this short practical session will help point you in the right direction in conducting your own scRNA-seq data analysis by:
 - Highlighting the relevant reading material, scRNA-seq packages and other resources available for further study.
 - Sharing practical advice on dealing with issues that you may encounter in your own analyses.
 - Providing you with code as starting material to tinker with.
+
+
 
 ## Description
 We will be studying the scRNA-seq dataset of 18hpf zebrafish embryos, with a focus on examining the gene expression states of the tailbud Neuromesodermal progenitors.
